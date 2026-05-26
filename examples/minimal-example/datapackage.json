@@ -1,0 +1,194 @@
+{
+  "profile": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "name": "nuseds-fraser-coho-sample",
+  "id": "10.1234/nuseds_fraser_coho_sample",
+  "title": "NuSEDS Fraser-area coho excerpt (sample)",
+  "description": "Thirty-row sample of coho escapement records from PFMA 29 NuSEDS export for demonstration",
+  "licenses": [
+    {
+      "name": "OGL-Canada-2.0",
+      "title": "Open Government Licence - Canada",
+      "path": "https://open.canada.ca/en/open-government-licence-canada"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "Fisheries and Oceans Canada - Pacific Region",
+      "role": "creator"
+    },
+    {
+      "title": "Kayla Suhan",
+      "email": "kayla.suhan@dfo-mpo.gc.ca",
+      "organization": "Fisheries and Oceans Canada - Pacific Region Science Branch",
+      "role": "contact"
+    }
+  ],
+  "sdp": {
+    "specVersion": "sdp-0.2.0",
+    "metadata": {
+      "dataset": "metadata/dataset.csv",
+      "tables": "metadata/tables.csv",
+      "columnDictionary": "metadata/column_dictionary.csv",
+      "codes": "metadata/codes.csv"
+    },
+    "profile": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+    "rules": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/sdp.rules.yaml"
+  },
+  "resources": [
+    {
+      "profile": "tabular-data-resource",
+      "name": "sdp_dataset",
+      "path": "metadata/dataset.csv",
+      "title": "SDP dataset metadata",
+      "description": "Dataset-level metadata.",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "sdp_tables",
+      "path": "metadata/tables.csv",
+      "title": "SDP tables metadata",
+      "description": "Table-level metadata.",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "sdp_column_dictionary",
+      "path": "metadata/column_dictionary.csv",
+      "title": "SDP column dictionary metadata",
+      "description": "Column-level metadata.",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "sdp_codes",
+      "path": "metadata/codes.csv",
+      "title": "SDP codes metadata",
+      "description": "Controlled code list metadata.",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json"
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "nuseds_fraser_coho",
+      "path": "data/nuseds-fraser-coho-sample.csv",
+      "title": "Fraser-area coho escapement estimates (sample)",
+      "description": "Sample of NuSEDS coho escapement records for PFMA 29",
+      "schema": {
+        "primaryKey": "POP_ID",
+        "fields": [
+          {
+            "name": "POP_ID",
+            "title": "Population ID",
+            "description": "NuSEDS population identifier",
+            "type": "string",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "POPULATION",
+            "title": "Population name",
+            "description": "Population name with area context",
+            "type": "string"
+          },
+          {
+            "name": "AREA",
+            "title": "PFMA area",
+            "description": "Pacific Fishery Management Area code",
+            "type": "string"
+          },
+          {
+            "name": "WATERBODY",
+            "title": "Waterbody name",
+            "description": "Local stream or river name",
+            "type": "string"
+          },
+          {
+            "name": "ANALYSIS_YR",
+            "title": "Run year",
+            "description": "Brood/run year of escapement estimate",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "SPECIES",
+            "title": "Species code",
+            "description": "Species common name/code (Coho)",
+            "type": "string",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "RUN_TYPE",
+            "title": "Run timing",
+            "description": "Run timing category (e.g., Fall)",
+            "type": "string"
+          },
+          {
+            "name": "NATURAL_SPAWNERS_TOTAL",
+            "title": "Total natural spawners",
+            "description": "Estimated total natural-origin spawners",
+            "type": "integer"
+          },
+          {
+            "name": "ENUMERATION_METHODS",
+            "title": "Enumeration methods",
+            "description": "Field methods applied (may be multiple)",
+            "type": "string"
+          },
+          {
+            "name": "ESTIMATE_METHOD",
+            "title": "Estimate method",
+            "description": "Analytical method used for estimate",
+            "type": "string"
+          },
+          {
+            "name": "ESTIMATE_CLASSIFICATION",
+            "title": "Estimate classification",
+            "description": "Classification of abundance estimate",
+            "type": "string"
+          },
+          {
+            "name": "ESTIMATE_STAGE",
+            "title": "Estimate stage",
+            "description": "Stage of estimate (e.g., final, near-final)",
+            "type": "string"
+          },
+          {
+            "name": "RELIABILITY",
+            "title": "Reliability rating",
+            "description": "Relative reliability flag",
+            "type": "string"
+          },
+          {
+            "name": "START_DTT",
+            "title": "Start date",
+            "description": "Start date of survey period",
+            "type": "date"
+          },
+          {
+            "name": "END_DTT",
+            "title": "End date",
+            "description": "End date of survey period",
+            "type": "date"
+          },
+          {
+            "name": "WATERSHED_CDE",
+            "title": "Watershed code",
+            "description": "Watershed code (linked to BC watershed atlas)",
+            "type": "string"
+          },
+          {
+            "name": "FULL_CU_IN",
+            "title": "Conservation Unit code",
+            "description": "Conservation Unit code used in NuSEDS (CO-xx)",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}

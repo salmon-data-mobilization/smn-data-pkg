@@ -1,0 +1,10 @@
+repos:
+  - repo: local
+    hooks:
+      - id: sdp-generated-artifacts
+        name: Check generated SDP artifacts
+        entry: python scripts/generate_artifacts.py --check
+        language: python
+        additional_dependencies:
+          - PyYAML
+        pass_filenames: false

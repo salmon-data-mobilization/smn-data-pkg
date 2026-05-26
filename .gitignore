@@ -1,0 +1,47 @@
+# R
+.Rhistory
+.Rapp.history
+.RData
+.Ruserdata
+*.Rproj
+*.Rproj.user
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+ENV/
+
+# Quarto
+_quarto.yml
+_site/
+*.qmd.cache
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.log
+
+AGENTS.md
+docs/plans/*
+!docs/plans/fdp-plan.md
+.cursorignore
+.cursor/
+FRAMEWORK_COMPARISON.md
+CLARIFICATIONS_NEEDED.md
+outputs/*

@@ -1,0 +1,5 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Salmon Data Package Profile",
+  "description": "Custom Frictionless Data Package profile for Salmon Data Package (SDP) packages."
+}
