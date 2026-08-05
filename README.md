@@ -11,7 +11,7 @@ The **Salmon Data Package (SDP)** is designed to:
 - Be **ontology-aware**, linking columns and codes to the **DFO Salmon Ontology** and related vocabularies
 - Use a CSV-canonical custom Frictionless Data Package profile with Tabular Data Resource resources
 
-Each SDP instance is a small directory of CSV data files and metadata CSVs that describe the dataset, tables, columns, and controlled codes. Publication-ready packages include a generated `datapackage.json` descriptor that declares the SDP custom Frictionless profile and agrees with the canonical CSV metadata.
+Each SDP instance is a small directory of CSV data files and metadata CSVs that describe the dataset, tables, columns, and controlled codes. Optional metadata can describe procedures and measure-specific logical observation structures for mixed-grain tables. Publication-ready packages include a generated `datapackage.json` descriptor that declares the SDP custom Frictionless profile and agrees with the canonical CSV metadata.
 
 **Integration context:** See the [Salmon Data Integration System overview page](https://br-johnson.github.io/salmon-data-integration-system/) and [walkthrough video](https://youtu.be/B0Zqac49zng?si=VmOjbfMDMd2xW9fH).
 
@@ -83,11 +83,12 @@ Adopting the Salmon Data Package specification enables a range of capabilities f
 - Follow `docs/quickstart.md` for the step-by-step walkthrough.
 - Download and fill in `templates/salmon-data-package-template.zip` for a blank package template.
 - Use `examples/minimal-example/` as a template for the canonical `metadata/` + `data/` package layout.
+- Use `examples/mixed-grain-example/` to see measure-specific dimensions, SOSA procedures, and the optional `reproducibility/` sidecar layout.
 - Use the Frictionless Table Schema files under `schema/frictionless/metadata/` as the authoritative metadata schemas, and `docs/field-reference.md` for a generated field reference.
 - Use `SPECIFICATION.md` for the rules that define validity.
 - Run `python3 scripts/validate_package.py examples/minimal-example` for strict publication validation once dependencies from `requirements.txt` are installed.
 
-For I-ADOPT (a standard for describing variables by parts) guidance and IRI (a web identifier that points to a concept on the internet) sources, see `docs/i-adopt-integration-guide.md` and the I-ADOPT terminology catalogue UI at https://i-adopt.github.io/terminologies/ (role-by-role vocabulary browser).
+For I-ADOPT (a standard for describing variables by parts) and SOSA procedure guidance, see `docs/i-adopt-integration-guide.md`. For mixed-grain tables and W3C Data Cube alignment, see `docs/observation-structure-guide.md`.
 
 For EDH/GeoNetwork exporter implementation guidance, see `docs/edh-hnap-mapping.md`.
 
@@ -114,14 +115,13 @@ sdp-spec/
 ├── docs/                   # Guides and background documentation
 │   ├── field-reference.md  # Generated from Frictionless metadata schemas
 │   ├── quickstart.md       # Exporter-first setup and package assembly
+│   ├── observation-structure-guide.md # Mixed-grain measure bindings
+│   ├── i-adopt-integration-guide.md # I-ADOPT/SOSA role boundary
 │   ├── edh-hnap-mapping.md # SDP dataset metadata to HNAP XML mapping guidance
 │   └── ...                 # Additional non-normative implementation guides
 ├── examples/               # Example packages
-│   └── minimal-example/
-│       ├── datapackage.json
-│       ├── metadata/
-│       ├── data/
-│       └── README.md
+│   ├── minimal-example/
+│   └── mixed-grain-example/
 ├── CHANGELOG.md            # Version history
 ├── LICENSE                 # License terms
 └── .github/

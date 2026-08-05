@@ -1,0 +1,4 @@
+dataset_id,method_iri,method_label,method_description,method_version,protocol_iri,citation
+https://example.org/datasets/mixed-grain-stock-recruit,https://example.org/methods/spawning-ground-survey,Spawning-ground survey,Survey procedure used to estimate total spawner abundance,,,
+https://example.org/datasets/mixed-grain-stock-recruit,https://example.org/methods/mark-recapture,Mark-recapture estimate,Procedure estimating recruit abundance from marked and recaptured fish,,,
+https://example.org/datasets/mixed-grain-stock-recruit,https://example.org/methods/expanded-count,Expanded count,Procedure estimating recruit abundance by expanding an observed count,,,

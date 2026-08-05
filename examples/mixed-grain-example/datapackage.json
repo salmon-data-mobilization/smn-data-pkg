@@ -1,0 +1,159 @@
+{
+  "profile": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "name": "mixed-grain-stock-recruit",
+  "id": "https://example.org/datasets/mixed-grain-stock-recruit",
+  "title": "Mixed-grain stock-recruit example",
+  "description": "Illustrative wide table with measure-specific observation grain",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0",
+      "title": "Creative Commons Attribution 4.0 International",
+      "path": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "Salmon Data Mobilization Initiative",
+      "role": "creator"
+    },
+    {
+      "title": "SDP Maintainer",
+      "email": "sdp@example.org",
+      "role": "contact"
+    }
+  ],
+  "sdp": {
+    "specVersion": "sdp-0.2.0",
+    "metadata": {
+      "dataset": "metadata/dataset.csv",
+      "tables": "metadata/tables.csv",
+      "columnDictionary": "metadata/column_dictionary.csv",
+      "codes": "metadata/codes.csv",
+      "methods": "metadata/methods.csv",
+      "observationStructures": "metadata/structure/observation_structures.csv",
+      "observationComponents": "metadata/structure/observation_components.csv"
+    }
+  },
+  "resources": [
+    {
+      "name": "sdp_dataset",
+      "path": "metadata/dataset.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
+    },
+    {
+      "name": "sdp_tables",
+      "path": "metadata/tables.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
+    },
+    {
+      "name": "sdp_column_dictionary",
+      "path": "metadata/column_dictionary.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
+    },
+    {
+      "name": "sdp_codes",
+      "path": "metadata/codes.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json"
+    },
+    {
+      "name": "sdp_methods",
+      "path": "metadata/methods.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/methods.schema.json"
+    },
+    {
+      "name": "sdp_observation_structures",
+      "path": "metadata/structure/observation_structures.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/observation_structures.schema.json"
+    },
+    {
+      "name": "sdp_observation_components",
+      "path": "metadata/structure/observation_components.csv",
+      "profile": "tabular-data-resource",
+      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/observation_components.schema.json"
+    },
+    {
+      "name": "stock_recruit",
+      "path": "data/stock_recruit.csv",
+      "profile": "tabular-data-resource",
+      "schema": {
+        "primaryKey": [
+          "stock_id",
+          "brood_year",
+          "return_year",
+          "age"
+        ],
+        "fields": [
+          {
+            "name": "stock_id",
+            "title": "Stock identifier",
+            "description": "Identifier for the salmon stock",
+            "type": "string",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "brood_year",
+            "title": "Brood year",
+            "description": "Year in which the cohort was spawned",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "return_year",
+            "title": "Return year",
+            "description": "Year in which recruits returned",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "age",
+            "title": "Age at return",
+            "description": "Age in years at return",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "total_spawners",
+            "title": "Total spawners",
+            "description": "Spawner abundance for the brood year",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "recruits",
+            "title": "Recruits",
+            "description": "Age-specific recruit abundance",
+            "type": "integer",
+            "constraints": {
+              "required": true
+            }
+          },
+          {
+            "name": "estimate_method",
+            "title": "Recruit estimation procedure",
+            "description": "Code identifying the procedure used to estimate recruits",
+            "type": "string",
+            "constraints": {
+              "required": true
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -19,15 +19,29 @@ The **canonical** SDP package layout is:
 - `metadata/tables.csv` - table-level metadata.
 - `metadata/column_dictionary.csv` - column-level metadata.
 - `metadata/codes.csv` - controlled code lists (a controlled vocabulary is a defined list of allowed values) when categorical columns exist.
+- `metadata/methods.csv` - optional registry of procedures associated with measurements.
+- `metadata/structure/observation_structures.csv` and `metadata/structure/observation_components.csv` - optional paired files that declare measure-specific logical grain in wide or mixed-grain tables.
 - One or more data files referenced from `metadata/tables.csv` (typically under `data/`).
 
 For a complete published SDP:
 
 - `datapackage.json` - a generated JSON (a text format for structured data) descriptor declaring the SDP Frictionless profile and listing the SDP metadata resources plus the data resources.
 
-Optional sidecars:
+The directory is the canonical package shape. A ZIP may be created as a transport
+serialization, but it is not a second dataset resource and need not be stored
+inside or alongside a catalog record.
 
-- Additional sidecars such as `README.md`, `run-log.md`, `decision-log.md`, `qc-summary.md`, or `metadata_notes.md`.
+Optional reproducibility sidecars belong under `reproducibility/`, at the same
+directory level as `data/` and `metadata/`:
+
+- `reviewed_semantic_selections.csv` - a review ledger for semantic choices.
+- `workflow/` - transformation code, notebooks, environment declarations, and run instructions.
+- `provenance/` - transformation provenance and decision records.
+- `source/` - redistributable source snapshots when they add lineage value and do not merely duplicate canonical `data/` files.
+
+These sidecars document how an SDP was produced. They are not canonical SDP
+semantic metadata and are not listed as Tabular Data Resources unless an export
+profile explicitly requires that treatment.
 
 Canonical directory layout:
 
@@ -38,13 +52,22 @@ Canonical directory layout:
     tables.csv
     column_dictionary.csv
     codes.csv        # omit when not needed
+    methods.csv      # optional
+    structure/       # optional; both files are present together
+      observation_structures.csv
+      observation_components.csv
   data/
     <table files referenced from metadata/tables.csv>
+  reproducibility/   # optional sidecars
+    reviewed_semantic_selections.csv
+    workflow/
+    provenance/
+    source/
   datapackage.json   # required for complete/published packages
 ```
 
 Compatibility note:
-- Strict SDP publication validation only validates the canonical `metadata/` + `data/` layout above.
+- Strict SDP publication validation validates the core layout and any recognized optional metadata files that are present. Reproducibility sidecars are preserved but are outside SDP validity checks.
 - Older draft package shapes are outside this version's canonical package shape.
 
 ## `datapackage.json` guidance
@@ -55,6 +78,7 @@ Minimum requirements:
 
 - Set `profile` to `https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json`.
 - Include tabular resources for `metadata/dataset.csv`, `metadata/tables.csv`, `metadata/column_dictionary.csv`, and `metadata/codes.csv` when `codes.csv` is present.
+- Include resources for `metadata/methods.csv` and the paired observation-structure files when those optional files are present.
 - Reference the canonical Frictionless Table Schema URL for each SDP metadata resource.
 - Include one data resource for each row in `metadata/tables.csv`.
 - Set each resource path to the matching `file_name` value from `metadata/tables.csv`.
@@ -78,7 +102,8 @@ If a CSV value and the generated `datapackage.json` disagree, the package is inv
 
 ## Identifier rules
 
-Identifiers are `dataset_id`, `table_id`, and `column_name`.
+Identifiers are `dataset_id`, `table_id`, `column_name`, and
+`observation_structure_id`.
 
 - `dataset_id` is an opaque identifier used to join across metadata files. It must be unique within the package. Prefer a DOI (Digital Object Identifier, a persistent identifier for a dataset or publication) when available; otherwise use a stable local identifier.
 - `table_id` and `column_name` are constrained for tool-friendly joins:
@@ -86,6 +111,8 @@ Identifiers are `dataset_id`, `table_id`, and `column_name`.
   - Start with a letter or underscore.
   - `table_id` must be unique within a `dataset_id`.
   - `column_name` must be unique within a `table_id`.
+- `observation_structure_id` follows the same allowed-character rule and must be
+  unique within its `dataset_id` and `table_id`.
 
 ## Data types
 
@@ -115,7 +142,77 @@ A measurement column (a column whose values are the observed or computed quantit
 - `property_iri`
 - `entity_iri`
 
-`constraint_iri` and `method_iri` are optional.
+`constraint_iri` is optional and may contain multiple semicolon-separated IRIs.
+
+`method_iri` is retained for compatibility as an optional **static SOSA
+Procedure association**: it applies to every non-empty value in that measurement
+column. It is not an I-ADOPT variable component. When `metadata/methods.csv` is
+present, every non-empty `method_iri` must resolve to
+a method row in the same dataset. Packages that use the observation-structure
+extension and a static `method_iri` must include that registry. Legacy packages
+without either new extension remain valid.
+
+I-ADOPT variable decomposition uses Property, Entity, Constraint, and optional
+Statistical Modifier roles. I-ADOPT does not define a Method or Procedure
+component. Method provenance is modelled separately using SOSA.
+
+## Measure-specific observation structures
+
+The paired optional files under `metadata/structure/` describe logical
+observations when one physical table contains measures at different grains.
+They are unnecessary when table-level row semantics already describe every
+measure without ambiguity.
+
+- `observation_structures.csv` declares package-local structures within a table.
+- `observation_components.csv` binds columns to `measure`, `dimension`, or
+  `attribute` roles for each structure.
+- Each structure has exactly one measure and at least one dimension. When the
+  paired extension is present, every measurement column is the measure of
+  exactly one structure.
+- Dimensions identify a logical observation and therefore define that measure's
+  grain. Attributes describe an observation without changing its grain.
+- Component order is unique and contiguous from one. A column is bound at most
+  once per structure.
+- Measure and dimension components set `required_when_observed` to `TRUE`. When
+  a measure value is non-empty, every component marked `TRUE` is non-empty.
+- If a wide table repeats a coarser-grain observation across finer-grain rows,
+  its measure and bound attributes must be invariant for a repeated dimension
+  tuple after values are normalized according to their dictionary
+  `value_type`.
+
+The role names align conceptually with W3C RDF Data Cube component roles, but
+these CSV files are not an RDF Data Cube Data Structure Definition and do not by
+themselves assert Data Cube conformance. An exporter can project each SDP
+structure into a normalized observation stream and an appropriate Data Cube
+structure. Data Cube `qb:measureDimension`/`qb:measureType` is a specific
+long-form multi-measure pattern; it is not a synonym for SDP's measure-specific
+dimension binding.
+
+An I-ADOPT `constraint_iri` and a structure dimension answer different questions.
+A constraint is fixed semantic context in the variable definition; a dimension
+is a row-varying coordinate that identifies a particular observation. A column
+label alone is not machine-readable decomposition. If the compound `term_iri`
+does not expose that fixed context to consumers, retain the appropriate
+I-ADOPT constraint even when the label mentions it.
+
+## Methods and procedures
+
+`metadata/methods.csv` is an optional procedure registry. Each row identifies a
+resource treated as `sosa:Procedure`, with a label and description plus optional
+version, protocol IRI, and citation. `method_iri` is unique within the dataset.
+
+Use one of two association patterns:
+
+- Put a fixed procedure IRI in `column_dictionary.method_iri` when it applies to
+  every non-empty value of one measurement column.
+- For row-varying procedures, bind a categorical column as an observation
+  `attribute` with `component_relation_iri` equal to
+  `http://www.w3.org/ns/sosa/usedProcedure`. Every enumerated code in that
+  column, including currently unobserved allowed values, has a `codes.csv`
+  `term_iri` resolving to `methods.csv`.
+
+Transformation scripts, execution environments, parameter files, and detailed
+run provenance belong under `reproducibility/`, not in `methods.csv`.
 
 ## Codes rules
 
@@ -138,5 +235,7 @@ These documents provide guidance and implementation detail but do not change val
 - `docs/quickstart.md`
 - `docs/implementation-guide.md`
 - `docs/i-adopt-integration-guide.md`
+- `docs/observation-structure-guide.md`
+- `docs/adr/0001-observation-structure-and-procedure-metadata.md`
 - `docs/sdp-profile-schema-guide.md`
 - `docs/edh-hnap-mapping.md`

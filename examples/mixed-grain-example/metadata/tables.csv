@@ -1,0 +1,2 @@
+dataset_id,table_id,file_name,table_label,description,observation_unit,observation_unit_iri,primary_key
+https://example.org/datasets/mixed-grain-stock-recruit,stock_recruit,data/stock_recruit.csv,Stock-recruit observations,Wide table containing measures at brood-year and age-specific grains,Stock-recruit record,,"stock_id,brood_year,return_year,age"

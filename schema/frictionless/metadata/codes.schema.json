@@ -63,7 +63,8 @@
       "constraints": {
         "enum": [
           "skos_concept",
-          "owl_class"
+          "owl_class",
+          "owl_named_individual"
         ]
       }
     }
