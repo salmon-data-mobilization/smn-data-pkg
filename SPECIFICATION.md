@@ -147,8 +147,10 @@ A measurement column (a column whose values are the observed or computed quantit
 `method_iri` is retained for compatibility as an optional **static SOSA
 Procedure association**: it applies to every non-empty value in that measurement
 column. It is not an I-ADOPT variable component. When `metadata/methods.csv` is
-present, every non-empty `method_iri` must resolve to a method row in the same
-dataset.
+present, every non-empty `method_iri` must resolve to
+a method row in the same dataset. Packages that use the observation-structure
+extension and a static `method_iri` must include that registry. Legacy packages
+without either new extension remain valid.
 
 I-ADOPT variable decomposition uses Property, Entity, Constraint, and optional
 Statistical Modifier roles. I-ADOPT does not define a Method or Procedure
@@ -164,8 +166,9 @@ measure without ambiguity.
 - `observation_structures.csv` declares package-local structures within a table.
 - `observation_components.csv` binds columns to `measure`, `dimension`, or
   `attribute` roles for each structure.
-- Each structure has exactly one measure. When the paired extension is present,
-  every measurement column is the measure of exactly one structure.
+- Each structure has exactly one measure and at least one dimension. When the
+  paired extension is present, every measurement column is the measure of
+  exactly one structure.
 - Dimensions identify a logical observation and therefore define that measure's
   grain. Attributes describe an observation without changing its grain.
 - Component order is unique and contiguous from one. A column is bound at most

@@ -117,6 +117,22 @@ class ObservationStructureValidationTests(unittest.TestCase):
 
         self.assertHasError("must have exactly one measure component")
 
+    def test_structure_requires_at_least_one_dimension_component(self) -> None:
+        path = (
+            self.package_path
+            / "metadata"
+            / "structure"
+            / "observation_components.csv"
+        )
+        rows = read_csv(path)
+        for row in rows:
+            if row["observation_structure_id"] == "total_spawners_by_brood":
+                if row["component_role"] == "dimension":
+                    row["component_role"] = "attribute"
+        write_csv(path, rows, rows[0].keys())
+
+        self.assertHasError("must have at least one dimension component")
+
     def test_present_structure_extension_must_cover_every_measurement(self) -> None:
         structures_path = (
             self.package_path
@@ -210,6 +226,23 @@ class ObservationStructureValidationTests(unittest.TestCase):
         write_csv(path, rows, rows[0].keys())
 
         self.assertHasError("method_iri is not registered")
+
+    def test_static_method_reference_requires_registry(self) -> None:
+        (self.package_path / "metadata" / "methods.csv").unlink()
+        descriptor_path = self.package_path / "datapackage.json"
+        descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
+        descriptor["resources"] = [
+            resource
+            for resource in descriptor["resources"]
+            if resource.get("path") != "metadata/methods.csv"
+        ]
+        descriptor["sdp"]["metadata"].pop("methods")
+        descriptor_path.write_text(
+            json.dumps(descriptor, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        self.assertHasError("requires metadata/methods.csv")
 
     def test_descriptor_must_list_present_extended_metadata(self) -> None:
         path = self.package_path / "datapackage.json"

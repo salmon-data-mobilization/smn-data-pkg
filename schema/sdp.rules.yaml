@@ -45,14 +45,17 @@ rules:
 - id: dimensions_define_measure_grain
   severity: error
   description: Measure and dimension components set required_when_observed to TRUE. When
-    a measure is non-empty, every component marked required_when_observed is non-empty,
-    and repeated rows with the same dictionary-type-normalized dimension tuple have
-    identical normalized measure and bound attribute values.
+    a measure is non-empty, every component marked required_when_observed is non-empty.
+    Every structure has at least one dimension, and repeated rows with the same
+    dictionary-type-normalized dimension tuple have identical normalized measure and
+    bound attribute values.
 - id: methods_are_sosa_procedures
   severity: error
   description: metadata/methods.csv records SOSA Procedure resources, not I-ADOPT variable
-    components. When methods.csv is present, every non-empty column_dictionary.method_iri
-    resolves to a method row in the same dataset.
+    components. When methods.csv is present, a non-empty column_dictionary.method_iri
+    resolves to a method row in the same dataset. The observation-structure extension
+    requires the registry when it uses a static method_iri; legacy packages without
+    either extension remain valid.
 - id: row_varying_procedures_use_codes
   severity: error
   description: A component bound with http://www.w3.org/ns/sosa/usedProcedure is a categorical

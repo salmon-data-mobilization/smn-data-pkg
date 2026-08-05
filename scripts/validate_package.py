@@ -312,6 +312,24 @@ class Validator:
             methods_by_key[key] = method
 
         methods_path = self.package_path / self.schemas["methods"]["sdp:path"]
+        static_references = [
+            column
+            for column in metadata["column_dictionary"]
+            if not is_blank(column.get("method_iri"))
+        ]
+        structures_path = (
+            self.package_path
+            / self.schemas["observation_structures"]["sdp:path"]
+        )
+        if (
+            static_references
+            and structures_path.exists()
+            and not methods_path.exists()
+        ):
+            self.error(
+                "A static column_dictionary.method_iri reference used with the "
+                "observation-structure extension requires metadata/methods.csv."
+            )
         if methods_path.exists():
             for row_index, column in enumerate(metadata["column_dictionary"], start=2):
                 method_iri = column.get("method_iri", "")
@@ -426,6 +444,15 @@ class Validator:
                 self.error(
                     f"Observation structure {structure_key!r} must have exactly one measure component; "
                     f"found {len(measure_components)}."
+                )
+            dimension_count = sum(
+                component.get("component_role") == "dimension"
+                for component in components
+            )
+            if dimension_count < 1:
+                self.error(
+                    f"Observation structure {structure_key!r} must have at least one "
+                    "dimension component."
                 )
 
             orders = sorted(

@@ -20,8 +20,8 @@ Add two optional, paired CSV resources under `metadata/structure/`:
 - `observation_structures.csv` declares one logical structure per measure.
 - `observation_components.csv` binds columns as measure, dimension, or attribute.
 
-Dimensions define the measure's grain. Each structure has exactly one measure,
-and repeated rows at the same declared dimension tuple must have invariant
+Dimensions define the measure's grain. Each structure has exactly one measure
+and at least one dimension, and repeated rows at the same declared dimension tuple must have invariant
 measure and bound attribute values. The role names align with W3C RDF Data Cube,
 but SDP does not assert that these CSVs are a Data Cube Data Structure
 Definition. Exporters normalize each structure before choosing a Data Cube
@@ -34,7 +34,9 @@ Grain and invariance comparisons use values normalized by the dictionary
 
 Add optional `metadata/methods.csv` as a registry of SOSA Procedure resources.
 Retain `column_dictionary.method_iri` for compatibility, with clarified static
-procedure semantics. Represent a row-varying procedure as a categorical
+procedure semantics. Require the method registry when that static link is used
+with the observation-structure extension, while preserving legacy packages
+without either new extension. Represent a row-varying procedure as a categorical
 attribute bound using `sosa:usedProcedure`. Do not model Method as an I-ADOPT
 component. Every allowed code enumerated for that attribute resolves to a
 registered method, whether or not the current data happen to use the code.

@@ -131,7 +131,7 @@ Optional logical observation structures that declare the grain of individual mea
 
 Requirement: `optional`
 
-One row per measure-specific logical observation structure. Each structure has exactly one measure component in observation_components.csv.
+One row per measure-specific logical observation structure. Each structure has exactly one measure component and at least one dimension component in observation_components.csv.
 
 | Column | Type | Requirement | Description | Notes |
 | --- | --- | --- | --- | --- |

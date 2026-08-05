@@ -28,8 +28,8 @@ The two files are optional but paired:
 - `observation_components.csv` binds table columns to `measure`, `dimension`, or
   `attribute` roles.
 
-Each structure has exactly one measure. Dimensions define grain. Attributes add
-observation context without changing grain. Components marked
+Each structure has exactly one measure and at least one dimension. Dimensions
+define grain. Attributes add observation context without changing grain. Components marked
 `required_when_observed=TRUE` must be non-empty wherever the measure is
 non-empty. Measure and dimension components always use `TRUE`. When the paired
 extension is present, it covers every measurement column exactly once. The

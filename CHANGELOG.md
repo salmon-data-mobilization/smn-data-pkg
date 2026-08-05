@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Observation-structure validation now requires complete measurement coverage when the optional extension is present, resolves every enumerated `sosa:usedProcedure` code to the method registry, and compares grain/invariance using dictionary-typed values.
+- Observation-structure validation now requires complete measurement coverage and at least one dimension per structure when the optional extension is present, resolves its static and enumerated procedure references to the required method registry while retaining extension-free legacy packages, and compares grain/invariance using dictionary-typed values.
 - Corrected example organism-count units to QUDT `INDIV` and use the shared Salmon Domain Ontology `Abundance` characteristic instead of nonexistent QUDT terms.
 - Canonical SDP package layout is now explicitly documented as `metadata/*.csv` + `data/*.csv`; complete/published packages require generated root `datapackage.json` declaring the SDP Frictionless profile.
 - Updated `SPECIFICATION.md`, `docs/quickstart.md`, and `examples/minimal-example/` to align with the same canonical folder layout used by `metasalmon`.

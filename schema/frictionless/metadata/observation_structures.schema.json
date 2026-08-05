@@ -48,5 +48,5 @@
   "sdp:table": "observation_structures",
   "sdp:path": "metadata/structure/observation_structures.csv",
   "sdp:requirement": "optional",
-  "sdp:rowRule": "One row per measure-specific logical observation structure. Each structure has exactly one measure component in observation_components.csv."
+  "sdp:rowRule": "One row per measure-specific logical observation structure. Each structure has exactly one measure component and at least one dimension component in observation_components.csv."
 }
