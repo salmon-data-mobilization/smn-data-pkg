@@ -1,5 +1,5 @@
 version: sdp-0.2.0
-profile: https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json
+profile: https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json
 rules:
 - id: codes_required_for_categorical_columns
   severity: error

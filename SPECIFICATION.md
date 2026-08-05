@@ -76,7 +76,7 @@ The root `datapackage.json` is required for complete/published SDP packages. Bla
 
 Minimum requirements:
 
-- Set `profile` to `https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json`.
+- Set `profile` to `https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json`.
 - Include tabular resources for `metadata/dataset.csv`, `metadata/tables.csv`, `metadata/column_dictionary.csv`, and `metadata/codes.csv` when `codes.csv` is present.
 - Include resources for `metadata/methods.csv` and the paired observation-structure files when those optional files are present.
 - Reference the canonical Frictionless Table Schema URL for each SDP metadata resource.
