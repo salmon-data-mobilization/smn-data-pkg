@@ -1,5 +1,5 @@
 {
-  "profile": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
   "name": "nuseds-fraser-coho-sample",
   "id": "10.1234/nuseds_fraser_coho_sample",
   "title": "NuSEDS Fraser-area coho excerpt (sample)",
@@ -31,8 +31,8 @@
       "columnDictionary": "metadata/column_dictionary.csv",
       "codes": "metadata/codes.csv"
     },
-    "profile": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
-    "rules": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/sdp.rules.yaml"
+    "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+    "rules": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/sdp.rules.yaml"
   },
   "resources": [
     {
@@ -41,7 +41,7 @@
       "path": "metadata/dataset.csv",
       "title": "SDP dataset metadata",
       "description": "Dataset-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
     },
     {
       "profile": "tabular-data-resource",
@@ -49,7 +49,7 @@
       "path": "metadata/tables.csv",
       "title": "SDP tables metadata",
       "description": "Table-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
     },
     {
       "profile": "tabular-data-resource",
@@ -57,7 +57,7 @@
       "path": "metadata/column_dictionary.csv",
       "title": "SDP column dictionary metadata",
       "description": "Column-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
     },
     {
       "profile": "tabular-data-resource",
@@ -65,7 +65,7 @@
       "path": "metadata/codes.csv",
       "title": "SDP codes metadata",
       "description": "Controlled code list metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json"
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json"
     },
     {
       "profile": "tabular-data-resource",

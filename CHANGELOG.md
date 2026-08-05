@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved canonical SDP profile, rules, and metadata-schema URLs to the active
+  `salmon-data-mobilization.github.io/smn-data-pkg` GitHub Pages site. The
+  previously documented `dfo-pacific-science.github.io` URLs did not resolve.
 - Observation-structure validation now requires complete measurement coverage and at least one dimension per structure when the optional extension is present, resolves its static and enumerated procedure references to the required method registry while retaining extension-free legacy packages, and compares grain/invariance using dictionary-typed values.
 - Corrected example organism-count units to QUDT `INDIV` and use the shared Salmon Domain Ontology `Abundance` characteristic instead of nonexistent QUDT terms.
 - Canonical SDP package layout is now explicitly documented as `metadata/*.csv` + `data/*.csv`; complete/published packages require generated root `datapackage.json` declaring the SDP Frictionless profile.

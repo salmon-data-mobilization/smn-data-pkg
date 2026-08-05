@@ -85,6 +85,7 @@ Adopting the Salmon Data Package specification enables a range of capabilities f
 - Use `examples/minimal-example/` as a template for the canonical `metadata/` + `data/` package layout.
 - Use `examples/mixed-grain-example/` to see measure-specific dimensions, SOSA procedures, and the optional `reproducibility/` sidecar layout.
 - Use the Frictionless Table Schema files under `schema/frictionless/metadata/` as the authoritative metadata schemas, and `docs/field-reference.md` for a generated field reference.
+- Use the [published SDP v0.2 profile](https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json) for canonical public schema and rules URLs.
 - Use `SPECIFICATION.md` for the rules that define validity.
 - Run `python3 scripts/validate_package.py examples/minimal-example` for strict publication validation once dependencies from `requirements.txt` are installed.
 

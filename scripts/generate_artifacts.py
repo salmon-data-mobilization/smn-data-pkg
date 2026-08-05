@@ -31,7 +31,7 @@ TEMPLATE_DIR = ROOT / "templates" / "salmon-data-package-template"
 ZIP_PATH = ROOT / "templates" / "salmon-data-package-template.zip"
 FIELD_REFERENCE_PATH = ROOT / "docs" / "field-reference.md"
 PROFILE_URL = (
-    "https://dfo-pacific-science.github.io/smn-data-pkg/"
+    "https://salmon-data-mobilization.github.io/smn-data-pkg/"
     "profiles/salmon-data-package/v0.2/profile.json"
 )
 TABLE_ORDER = (
@@ -154,7 +154,7 @@ def validate_schema_bundle(bundle: dict) -> None:
 
 def metadata_schema_url(schema: dict) -> str:
     return (
-        "https://dfo-pacific-science.github.io/smn-data-pkg/"
+        "https://salmon-data-mobilization.github.io/smn-data-pkg/"
         f"schema/frictionless/metadata/{schema['sdp:table']}.schema.json"
     )
 
@@ -241,7 +241,7 @@ def render_profile(bundle: dict) -> dict:
         "sdp:version": bundle["rules"]["version"],
         "sdp:metadataResources": metadata_resources,
         "sdp:rules": (
-            "https://dfo-pacific-science.github.io/smn-data-pkg/"
+            "https://salmon-data-mobilization.github.io/smn-data-pkg/"
             "schema/sdp.rules.yaml"
         ),
     }

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "$id": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
   "title": "Salmon Data Package Profile",
   "description": "Custom Frictionless Data Package profile for Salmon Data Package (SDP) packages.",
   "type": "object",
@@ -10,7 +10,7 @@
   ],
   "properties": {
     "profile": {
-      "const": "https://dfo-pacific-science.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json"
+      "const": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json"
     },
     "resources": {
       "type": "array",
@@ -61,7 +61,7 @@
                 "const": "tabular-data-resource"
               },
               "schema": {
-                "const": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
+                "const": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json"
               }
             }
           }
@@ -90,7 +90,7 @@
                 "const": "tabular-data-resource"
               },
               "schema": {
-                "const": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
+                "const": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json"
               }
             }
           }
@@ -119,7 +119,7 @@
                 "const": "tabular-data-resource"
               },
               "schema": {
-                "const": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
+                "const": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json"
               }
             }
           }
@@ -135,7 +135,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP dataset metadata",
       "description": "Dataset-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/dataset.schema.json",
       "sdp:requirement": "required"
     },
     {
@@ -144,7 +144,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP tables metadata",
       "description": "Table-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/tables.schema.json",
       "sdp:requirement": "required"
     },
     {
@@ -153,7 +153,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP column dictionary metadata",
       "description": "Column-level metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/column_dictionary.schema.json",
       "sdp:requirement": "required"
     },
     {
@@ -162,7 +162,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP codes metadata",
       "description": "Controlled code list metadata.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json",
       "sdp:requirement": "conditional",
       "sdp:condition": "Required when any column_dictionary.csv row has column_role equal to categorical."
     },
@@ -172,7 +172,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP methods metadata",
       "description": "Optional registry of procedures associated with measurements in the package.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/methods.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/methods.schema.json",
       "sdp:requirement": "optional"
     },
     {
@@ -181,7 +181,7 @@
       "profile": "tabular-data-resource",
       "title": "SDP observation structures metadata",
       "description": "Optional logical observation structures that declare the grain of individual measures in wide or mixed-grain tables.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/observation_structures.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/observation_structures.schema.json",
       "sdp:requirement": "optional"
     },
     {
@@ -190,9 +190,9 @@
       "profile": "tabular-data-resource",
       "title": "SDP observation components metadata",
       "description": "Ordered bindings from table columns to the measure, dimensions, and attributes of a logical observation structure.",
-      "schema": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/frictionless/metadata/observation_components.schema.json",
+      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/observation_components.schema.json",
       "sdp:requirement": "optional"
     }
   ],
-  "sdp:rules": "https://dfo-pacific-science.github.io/smn-data-pkg/schema/sdp.rules.yaml"
+  "sdp:rules": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/sdp.rules.yaml"
 }
