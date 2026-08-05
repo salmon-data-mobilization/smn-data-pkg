@@ -17,7 +17,11 @@ This example package contains metadata for a sample of coho escapement records f
 
 `metadata/dataset.csv` also demonstrates optional discovery/export fields (`contact_org`, `contact_position`, `update_frequency`, `topic_categories`, `keywords`, `security_classification`) that support downstream catalog export (for example EDH/GeoNetwork) without requiring source database schema changes.
 
-This example shows the I-ADOPT-style component columns on one measurement column: `term_iri`, `property_iri`, `entity_iri`, and `unit_iri` are required for measurements; `constraint_iri` is optional; `method_iri` is an optional procedure/method link (aligned to SOSA `sosa:Procedure`, where SOSA is the W3C/OGC observations vocabulary). `term_iri` is the compound-variable pointer.
+This example shows semantic fields on one measurement column. `property_iri`,
+`entity_iri`, and optional `constraint_iri` are I-ADOPT decomposition fields;
+`term_iri` is the compound-variable pointer and `unit_iri` identifies the unit.
+The compatibility field `method_iri` is a separate static SOSA Procedure link,
+not an I-ADOPT component.
 
 ## Usage
 

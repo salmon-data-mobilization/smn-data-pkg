@@ -83,7 +83,7 @@ One row per column in each table.
 | property_iri | string | conditional | I-ADOPT property IRI. | Required when column_role is measurement. |
 | entity_iri | string | conditional | I-ADOPT entity IRI, meaning what the measurement is about. | Required when column_role is measurement. |
 | constraint_iri | string | optional | I-ADOPT constraint IRI(s). Separate multiple IRIs with semicolons. |  |
-| method_iri | string | optional | Procedure or method IRI, aligned to SOSA sosa:Procedure. |  |
+| method_iri | string | optional | Optional static SOSA Procedure IRI applying to every non-empty value in this measurement column. Retained for compatibility; this is not an I-ADOPT variable component. |  |
 
 ## `metadata/codes.csv`
 
@@ -105,4 +105,57 @@ One row per allowed code value in a categorical column.
 | code_description | string | optional | Longer description of what the code means. |  |
 | vocabulary_iri | string | recommended | IRI for the controlled vocabulary system that defines valid values. |  |
 | term_iri | string | recommended | IRI for the specific term that code_value represents. |  |
-| term_type | string | optional | Type of term. | Allowed: `skos_concept`, `owl_class` |
+| term_type | string | optional | Type of term. | Allowed: `skos_concept`, `owl_class`, `owl_named_individual` |
+
+## `metadata/methods.csv`
+
+Optional registry of procedures associated with measurements in the package.
+
+Requirement: `optional`
+
+One row per procedure described by this package. A method is a SOSA procedure association, not an I-ADOPT variable component.
+
+| Column | Type | Requirement | Description | Notes |
+| --- | --- | --- | --- | --- |
+| dataset_id | string | required | References dataset_id in metadata/dataset.csv. |  |
+| method_iri | string | required | Absolute IRI identifying a procedure resource, interpreted as a sosa:Procedure. |  |
+| method_label | string | required | Human-readable procedure label. |  |
+| method_description | string | required | Description sufficient to distinguish the procedure and understand its role. |  |
+| method_version | string | optional | Version, edition, or date label for the procedure when applicable. |  |
+| protocol_iri | string | optional | Absolute IRI for a protocol, standard operating procedure, or other normative method document. |  |
+| citation | string | optional | Bibliographic citation or concise source attribution for the procedure. |  |
+
+## `metadata/structure/observation_structures.csv`
+
+Optional logical observation structures that declare the grain of individual measures in wide or mixed-grain tables.
+
+Requirement: `optional`
+
+One row per measure-specific logical observation structure. Each structure has exactly one measure component in observation_components.csv.
+
+| Column | Type | Requirement | Description | Notes |
+| --- | --- | --- | --- | --- |
+| dataset_id | string | required | References dataset_id in metadata/dataset.csv. |  |
+| table_id | string | required | References table_id in metadata/tables.csv. |  |
+| observation_structure_id | string | required | Package-local identifier for one measure-specific logical observation structure. |  |
+| structure_label | string | required | Human-readable name for the logical observation structure. |  |
+| structure_description | string | required | Description of what one logical observation represents and why the selected dimensions define its grain. |  |
+
+## `metadata/structure/observation_components.csv`
+
+Ordered bindings from table columns to the measure, dimensions, and attributes of a logical observation structure.
+
+Requirement: `optional`
+
+One row per bound column. Dimensions define measure grain; attributes describe observations without changing grain.
+
+| Column | Type | Requirement | Description | Notes |
+| --- | --- | --- | --- | --- |
+| dataset_id | string | required | References dataset_id in metadata/dataset.csv. |  |
+| table_id | string | required | References table_id in metadata/tables.csv. |  |
+| observation_structure_id | string | required | References observation_structure_id in metadata/structure/observation_structures.csv. |  |
+| component_order | integer | required | One-based component order within the structure. |  |
+| column_name | string | required | Exact name of the bound column in the referenced data table. |  |
+| component_role | string | required | Structural role of the column for this measure-specific observation. | Allowed: `measure`, `dimension`, `attribute` |
+| component_relation_iri | string | optional | Optional absolute IRI for a more specific relationship between the observation and this component, such as sosa:usedProcedure for a row-varying procedure attribute. |  |
+| required_when_observed | boolean | required | TRUE when this component must be non-empty whenever the structure's measure value is non-empty. |  |

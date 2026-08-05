@@ -1,0 +1,2 @@
+dataset_id,table_id,column_name,semantic_field,selected_iri,review_status,review_note
+https://example.org/datasets/mixed-grain-stock-recruit,stock_recruit,recruits,property_iri,https://example.org/ontology/abundance,reviewed,Illustrative reviewed selection

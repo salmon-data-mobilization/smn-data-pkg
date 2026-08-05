@@ -34,7 +34,15 @@ PROFILE_URL = (
     "https://dfo-pacific-science.github.io/smn-data-pkg/"
     "profiles/salmon-data-package/v0.2/profile.json"
 )
-TABLE_ORDER = ("dataset", "tables", "column_dictionary", "codes")
+TABLE_ORDER = (
+    "dataset",
+    "tables",
+    "column_dictionary",
+    "codes",
+    "methods",
+    "observation_structures",
+    "observation_components",
+)
 FRICTIONLESS_TYPES = {
     "string",
     "integer",

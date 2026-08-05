@@ -132,7 +132,7 @@
     {
       "name": "method_iri",
       "type": "string",
-      "description": "Procedure or method IRI, aligned to SOSA sosa:Procedure."
+      "description": "Optional static SOSA Procedure IRI applying to every non-empty value in this measurement column. Retained for compatibility; this is not an I-ADOPT variable component."
     }
   ],
   "sdp:table": "column_dictionary",

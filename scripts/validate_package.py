@@ -10,7 +10,8 @@ import re
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 from urllib.parse import urlparse
@@ -22,6 +23,7 @@ import generate_artifacts
 
 TABLE_ORDER = generate_artifacts.TABLE_ORDER
 PROFILE_URL = generate_artifacts.PROFILE_URL
+SOSA_USED_PROCEDURE = "http://www.w3.org/ns/sosa/usedProcedure"
 
 KNOWN_LICENSES = {
     "Open Government Licence - Canada": {
@@ -47,6 +49,8 @@ IRI_FIELDS = {
         "method_iri",
     ),
     "codes": ("vocabulary_iri", "term_iri"),
+    "methods": ("method_iri", "protocol_iri"),
+    "observation_components": ("component_relation_iri",),
 }
 
 
@@ -86,7 +90,7 @@ class Validator:
             schema = self.schemas[table_name]
             path = self.package_path / schema["sdp:path"]
             if not path.exists():
-                if table_name != "codes":
+                if schema["sdp:requirement"] == "required":
                     self.error(f"Missing required metadata file: {schema['sdp:path']}")
                 metadata[table_name] = []
                 continue
@@ -192,6 +196,15 @@ class Validator:
         if not value_matches_type(value, field["type"]):
             self.error(f"{location} must be a {field['type']} value; found {value!r}.")
 
+        if "minimum" in constraints and field["type"] in {"integer", "number"}:
+            try:
+                if float(value) < float(constraints["minimum"]):
+                    self.error(
+                        f"{location} must be at least {constraints['minimum']}; found {value!r}."
+                    )
+            except ValueError:
+                pass
+
         if field["name"] in ("temporal_start", "temporal_end"):
             self.validate_temporal_value(value, location)
 
@@ -242,6 +255,7 @@ class Validator:
                 data.data_rows[row.get("table_id", "")] = rows
 
         columns_by_table: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
+        columns_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
         seen_columns: set[tuple[str, str, str]] = set()
         for row_index, row in enumerate(metadata["column_dictionary"], start=2):
             table_key = (row.get("dataset_id", ""), row.get("table_id", ""))
@@ -263,10 +277,374 @@ class Validator:
                 )
             seen_columns.add(column_key)
             columns_by_table[table_key].append(row)
+            columns_by_key[column_key] = row
 
         self.validate_primary_keys(metadata["tables"], columns_by_table)
         self.validate_data_files(metadata["tables"], columns_by_table, data)
         self.validate_codes(metadata, columns_by_table, data)
+        methods_by_key = self.validate_methods(metadata, dataset_id)
+        self.validate_observation_structures(
+            metadata,
+            dataset_id,
+            tables_by_key,
+            columns_by_key,
+            methods_by_key,
+            data,
+        )
+
+    def validate_methods(
+        self,
+        metadata: dict[str, list[dict[str, str]]],
+        dataset_id: str | None,
+    ) -> dict[tuple[str, str], dict[str, str]]:
+        methods_by_key: dict[tuple[str, str], dict[str, str]] = {}
+        for row_index, method in enumerate(metadata["methods"], start=2):
+            if dataset_id and method.get("dataset_id") != dataset_id:
+                self.error(
+                    f"metadata/methods.csv row {row_index} dataset_id does not match dataset.csv."
+                )
+            key = (method.get("dataset_id", ""), method.get("method_iri", ""))
+            if key in methods_by_key:
+                self.error(
+                    f"metadata/methods.csv row {row_index} duplicates method_iri "
+                    f"{method.get('method_iri')!r} within dataset {method.get('dataset_id')!r}."
+                )
+            methods_by_key[key] = method
+
+        methods_path = self.package_path / self.schemas["methods"]["sdp:path"]
+        if methods_path.exists():
+            for row_index, column in enumerate(metadata["column_dictionary"], start=2):
+                method_iri = column.get("method_iri", "")
+                if is_blank(method_iri):
+                    continue
+                key = (column.get("dataset_id", ""), method_iri)
+                if key not in methods_by_key:
+                    self.error(
+                        "metadata/column_dictionary.csv row "
+                        f"{row_index} method_iri is not registered in metadata/methods.csv: "
+                        f"{method_iri!r}."
+                    )
+        return methods_by_key
+
+    def validate_observation_structures(
+        self,
+        metadata: dict[str, list[dict[str, str]]],
+        dataset_id: str | None,
+        tables_by_key: dict[tuple[str, str], dict[str, str]],
+        columns_by_key: dict[tuple[str, str, str], dict[str, str]],
+        methods_by_key: dict[tuple[str, str], dict[str, str]],
+        data: PackageData,
+    ) -> None:
+        structures_path = self.package_path / self.schemas["observation_structures"]["sdp:path"]
+        components_path = self.package_path / self.schemas["observation_components"]["sdp:path"]
+        structures_present = structures_path.exists()
+        components_present = components_path.exists()
+        if structures_present != components_present:
+            self.error(
+                "metadata/structure/observation_structures.csv and "
+                "metadata/structure/observation_components.csv must be present together."
+            )
+        if not structures_present or not components_present:
+            return
+
+        structures_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
+        for row_index, structure in enumerate(metadata["observation_structures"], start=2):
+            if dataset_id and structure.get("dataset_id") != dataset_id:
+                self.error(
+                    "metadata/structure/observation_structures.csv row "
+                    f"{row_index} dataset_id does not match dataset.csv."
+                )
+            table_key = (structure.get("dataset_id", ""), structure.get("table_id", ""))
+            if table_key not in tables_by_key:
+                self.error(
+                    "metadata/structure/observation_structures.csv row "
+                    f"{row_index} references unknown table_id {structure.get('table_id')!r}."
+                )
+            key = table_key + (structure.get("observation_structure_id", ""),)
+            if key in structures_by_key:
+                self.error(
+                    "metadata/structure/observation_structures.csv row "
+                    f"{row_index} duplicates observation_structure_id "
+                    f"{structure.get('observation_structure_id')!r} within table "
+                    f"{structure.get('table_id')!r}."
+                )
+            structures_by_key[key] = structure
+
+        components_by_structure: dict[
+            tuple[str, str, str], list[dict[str, str]]
+        ] = defaultdict(list)
+        seen_component_orders: set[tuple[str, str, str, str]] = set()
+        seen_component_columns: set[tuple[str, str, str, str]] = set()
+        for row_index, component in enumerate(metadata["observation_components"], start=2):
+            structure_key = (
+                component.get("dataset_id", ""),
+                component.get("table_id", ""),
+                component.get("observation_structure_id", ""),
+            )
+            if structure_key not in structures_by_key:
+                self.error(
+                    "metadata/structure/observation_components.csv row "
+                    f"{row_index} references unknown observation structure {structure_key!r}."
+                )
+            column_key = (
+                component.get("dataset_id", ""),
+                component.get("table_id", ""),
+                component.get("column_name", ""),
+            )
+            if column_key not in columns_by_key:
+                self.error(
+                    "metadata/structure/observation_components.csv row "
+                    f"{row_index} references unknown column {component.get('column_name')!r}."
+                )
+
+            order_key = structure_key + (component.get("component_order", ""),)
+            if order_key in seen_component_orders:
+                self.error(
+                    "metadata/structure/observation_components.csv row "
+                    f"{row_index} duplicates component_order within {structure_key!r}."
+                )
+            seen_component_orders.add(order_key)
+
+            bound_column_key = structure_key + (component.get("column_name", ""),)
+            if bound_column_key in seen_component_columns:
+                self.error(
+                    "metadata/structure/observation_components.csv row "
+                    f"{row_index} binds column {component.get('column_name')!r} more than once."
+                )
+            seen_component_columns.add(bound_column_key)
+            components_by_structure[structure_key].append(component)
+
+        measure_bindings: dict[tuple[str, str, str], tuple[str, str, str]] = {}
+        for structure_key in structures_by_key:
+            components = components_by_structure.get(structure_key, [])
+            measure_components = [
+                component
+                for component in components
+                if component.get("component_role") == "measure"
+            ]
+            if len(measure_components) != 1:
+                self.error(
+                    f"Observation structure {structure_key!r} must have exactly one measure component; "
+                    f"found {len(measure_components)}."
+                )
+
+            orders = sorted(
+                int(component["component_order"])
+                for component in components
+                if re.fullmatch(r"[+-]?\d+", component.get("component_order", ""))
+            )
+            if orders != list(range(1, len(components) + 1)):
+                self.error(
+                    f"Observation structure {structure_key!r} component_order values must be "
+                    f"contiguous from 1; found {orders}."
+                )
+
+            for component in components:
+                role = component.get("component_role")
+                column_key = structure_key[:2] + (component.get("column_name", ""),)
+                column = columns_by_key.get(column_key)
+                if role == "measure":
+                    if column is not None and column.get("column_role") != "measurement":
+                        self.error(
+                            f"Observation structure {structure_key!r} measure component "
+                            f"{component.get('column_name')!r} must bind a measurement column."
+                        )
+                    if column_key in measure_bindings:
+                        self.error(
+                            f"Measurement column {column_key!r} is bound as the measure of more "
+                            "than one observation structure."
+                        )
+                    measure_bindings[column_key] = structure_key
+                if role in {"measure", "dimension"} and parse_bool(
+                    component.get("required_when_observed")
+                ) is not True:
+                    self.error(
+                        f"Observation structure {structure_key!r} {role} component "
+                        f"{component.get('column_name')!r} must set required_when_observed to TRUE."
+                    )
+                if component.get("component_relation_iri") == SOSA_USED_PROCEDURE:
+                    if role != "attribute":
+                        self.error(
+                            f"Observation structure {structure_key!r} sosa:usedProcedure "
+                            "component must have component_role attribute."
+                        )
+                    if column is not None and column.get("column_role") != "categorical":
+                        self.error(
+                            f"Observation structure {structure_key!r} sosa:usedProcedure "
+                            "component must bind a categorical column."
+                        )
+
+            if len(measure_components) == 1:
+                self.validate_structure_data(
+                    structure_key,
+                    components,
+                    measure_components[0],
+                    metadata,
+                    columns_by_key,
+                    methods_by_key,
+                    data,
+                )
+
+        measurement_columns = {
+            key
+            for key, column in columns_by_key.items()
+            if column.get("column_role") == "measurement"
+        }
+        missing_measurements = sorted(measurement_columns - set(measure_bindings))
+        if missing_measurements:
+            self.error(
+                "When observation structures are present, every measurement column "
+                "must be bound as exactly one measure; missing "
+                f"{missing_measurements!r}."
+            )
+
+    def validate_structure_data(
+        self,
+        structure_key: tuple[str, str, str],
+        components: list[dict[str, str]],
+        measure_component: dict[str, str],
+        metadata: dict[str, list[dict[str, str]]],
+        columns_by_key: dict[tuple[str, str, str], dict[str, str]],
+        methods_by_key: dict[tuple[str, str], dict[str, str]],
+        data: PackageData,
+    ) -> None:
+        table_id = structure_key[1]
+        measure_name = measure_component.get("column_name", "")
+        dimensions = [
+            component
+            for component in components
+            if component.get("component_role") == "dimension"
+        ]
+        attributes = [
+            component
+            for component in components
+            if component.get("component_role") == "attribute"
+        ]
+        invariant_components = [measure_component, *attributes]
+        values_by_dimensions: dict[tuple[str, ...], tuple[str, ...]] = {}
+
+        codes_by_key = {
+            (
+                code.get("dataset_id", ""),
+                code.get("table_id", ""),
+                code.get("column_name", ""),
+                code.get("code_value", ""),
+            ): code
+            for code in metadata["codes"]
+            if not is_blank(code.get("code_value"))
+        }
+        procedure_attributes = [
+            component
+            for component in attributes
+            if component.get("component_relation_iri") == SOSA_USED_PROCEDURE
+        ]
+        reported_procedure_codes: set[tuple[str, str]] = set()
+
+        # A code list declares the complete allowed procedure domain. Validate
+        # every enumerated value, even if this particular data version does not
+        # use it, so a future row cannot activate an unregistered procedure.
+        for procedure_component in procedure_attributes:
+            column_name = procedure_component.get("column_name", "")
+            procedure_codes = [
+                code
+                for code in metadata["codes"]
+                if code.get("dataset_id", "") == structure_key[0]
+                and code.get("table_id", "") == structure_key[1]
+                and code.get("column_name", "") == column_name
+                and not is_blank(code.get("code_value"))
+            ]
+            for code in procedure_codes:
+                code_value = normalize_cell(code.get("code_value"))
+                method_iri = normalize_cell(code.get("term_iri"))
+                if is_blank(method_iri):
+                    self.error(
+                        f"Observation structure {structure_key!r} sosa:usedProcedure code "
+                        f"{code_value!r} in column {column_name!r} requires a term_iri in "
+                        "metadata/codes.csv."
+                    )
+                elif (structure_key[0], method_iri) not in methods_by_key:
+                    self.error(
+                        f"Observation structure {structure_key!r} sosa:usedProcedure code "
+                        f"{code_value!r} term_iri is not registered in metadata/methods.csv: "
+                        f"{method_iri!r}."
+                    )
+
+        component_columns = {
+            component.get("column_name", ""): columns_by_key.get(
+                structure_key[:2] + (component.get("column_name", ""),),
+                {},
+            )
+            for component in components
+        }
+
+        for row_index, row in enumerate(data.data_rows.get(table_id, []), start=2):
+            measure_value = normalize_cell(row.get(measure_name, ""))
+            if is_blank(measure_value):
+                continue
+
+            for component in components:
+                if parse_bool(component.get("required_when_observed")) is True:
+                    column_name = component.get("column_name", "")
+                    if is_blank(row.get(column_name)):
+                        self.error(
+                            f"{table_id} row {row_index} observation structure "
+                            f"{structure_key[2]!r} component {column_name!r} is empty but "
+                            "required_when_observed is TRUE."
+                        )
+
+            dimension_values = tuple(
+                normalize_typed_cell(
+                    row.get(component.get("column_name", ""), ""),
+                    component_columns[component.get("column_name", "")].get(
+                        "value_type", "string"
+                    ),
+                )
+                for component in dimensions
+            )
+            if all(not is_blank(value) for value in dimension_values):
+                invariant_values = tuple(
+                    normalize_typed_cell(
+                        row.get(component.get("column_name", ""), ""),
+                        component_columns[component.get("column_name", "")].get(
+                            "value_type", "string"
+                        ),
+                    )
+                    for component in invariant_components
+                )
+                previous = values_by_dimensions.get(dimension_values)
+                if previous is not None and previous != invariant_values:
+                    self.error(
+                        f"Observation structure {structure_key!r} has conflicting values at "
+                        f"dimension tuple {dimension_values!r}: {previous!r} and "
+                        f"{invariant_values!r}."
+                    )
+                else:
+                    values_by_dimensions[dimension_values] = invariant_values
+
+            for procedure_component in procedure_attributes:
+                column_name = procedure_component.get("column_name", "")
+                code_value = normalize_cell(row.get(column_name, ""))
+                if is_blank(code_value):
+                    continue
+                report_key = (column_name, code_value)
+                if report_key in reported_procedure_codes:
+                    continue
+                reported_procedure_codes.add(report_key)
+                code_key = structure_key[:2] + (column_name, code_value)
+                code = codes_by_key.get(code_key, {})
+                method_iri = normalize_cell(code.get("term_iri"))
+                if is_blank(method_iri):
+                    self.error(
+                        f"Observation structure {structure_key!r} sosa:usedProcedure code "
+                        f"{code_value!r} in column {column_name!r} requires a term_iri in "
+                        "metadata/codes.csv."
+                    )
+                elif (structure_key[0], method_iri) not in methods_by_key:
+                    self.error(
+                        f"Observation structure {structure_key!r} sosa:usedProcedure code "
+                        f"{code_value!r} term_iri is not registered in metadata/methods.csv: "
+                        f"{method_iri!r}."
+                    )
 
     def validate_safe_table_path(self, file_name: str, location: str) -> Path | None:
         if is_blank(file_name):
@@ -517,7 +895,10 @@ class Validator:
         for table_name in TABLE_ORDER:
             schema = self.schemas[table_name]
             path = schema["sdp:path"]
-            if table_name == "codes" and not (self.package_path / path).exists():
+            if (
+                schema["sdp:requirement"] != "required"
+                and not (self.package_path / path).exists()
+            ):
                 continue
             expected = generate_artifacts.metadata_resource(table_name, schema)
             resource = resources_by_path.get(path)
@@ -578,6 +959,42 @@ def normalize_cell(value: object) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def normalize_typed_cell(value: object, field_type: str) -> str:
+    """Canonicalize already validated values for semantic equality checks."""
+    text = normalize_cell(value)
+    if text == "":
+        return ""
+    if field_type == "integer":
+        return str(int(text))
+    if field_type == "number":
+        try:
+            number = Decimal(text)
+        except InvalidOperation:
+            return text
+        if number == 0:
+            return "0"
+        return format(number.normalize(), "f")
+    if field_type == "boolean":
+        return "true" if parse_bool(text) is True else "false"
+    if field_type == "date":
+        try:
+            return date.fromisoformat(text).isoformat()
+        except ValueError:
+            return text
+    if field_type == "datetime":
+        candidate = text[:-1] + "+00:00" if text.endswith("Z") else text
+        try:
+            parsed = datetime.fromisoformat(candidate)
+        except ValueError:
+            return text
+        if parsed.tzinfo is not None:
+            parsed = parsed.astimezone(timezone.utc)
+        return parsed.isoformat()
+    if field_type == "year":
+        return f"{int(text):04d}"
+    return text
 
 
 def is_blank(value: object) -> bool:
