@@ -1,5 +1,5 @@
 {
-  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json",
   "name": "nuseds-fraser-coho-sample",
   "id": "10.1234/nuseds_fraser_coho_sample",
   "title": "NuSEDS Fraser-area coho excerpt (sample)",
@@ -31,7 +31,7 @@
       "columnDictionary": "metadata/column_dictionary.csv",
       "codes": "metadata/codes.csv"
     },
-    "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+    "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json",
     "rules": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/sdp.rules.yaml"
   },
   "resources": [

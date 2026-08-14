@@ -25,21 +25,23 @@ ROOT = Path(__file__).resolve().parents[1]
 METADATA_SCHEMA_DIR = ROOT / "schema" / "frictionless" / "metadata"
 PROFILE_SOURCE_PATH = ROOT / "schema" / "frictionless" / "profile-source.json"
 RULES_PATH = ROOT / "schema" / "sdp.rules.yaml"
-PROFILE_PATH = ROOT / "profiles" / "salmon-data-package" / "v0.2" / "profile.json"
+# Prior profile version directories (v0.2, ...) are FROZEN published
+# contracts: already-released descriptors resolve to their canonical URLs,
+# so a new spec version gets a NEW directory and the old ones never change.
+PROFILE_PATH = ROOT / "profiles" / "salmon-data-package" / "v0.3" / "profile.json"
 TEMPLATE_SOURCE_DIR = ROOT / "template-source" / "salmon-data-package-template"
 TEMPLATE_DIR = ROOT / "templates" / "salmon-data-package-template"
 ZIP_PATH = ROOT / "templates" / "salmon-data-package-template.zip"
 FIELD_REFERENCE_PATH = ROOT / "docs" / "field-reference.md"
 PROFILE_URL = (
     "https://salmon-data-mobilization.github.io/smn-data-pkg/"
-    "profiles/salmon-data-package/v0.2/profile.json"
+    "profiles/salmon-data-package/v0.3/profile.json"
 )
 TABLE_ORDER = (
     "dataset",
     "tables",
     "column_dictionary",
     "codes",
-    "methods",
     "observation_structures",
     "observation_components",
 )
@@ -446,7 +448,12 @@ def check() -> int:
         generate(bundle, root=temp_root)
 
         diffs = []
-        diffs.extend(dircmp_diffs(temp_root / "profiles", ROOT / "profiles"))
+        # Compare only the CURRENT profile version directory: prior version
+        # dirs are frozen published contracts the generator never rewrites.
+        current_profile_dir = PROFILE_PATH.parent.relative_to(ROOT)
+        diffs.extend(
+            dircmp_diffs(temp_root / current_profile_dir, ROOT / current_profile_dir)
+        )
         diffs.extend(dircmp_diffs(temp_root / "templates", ROOT / "templates"))
 
         generated_ref = temp_root / FIELD_REFERENCE_PATH.relative_to(ROOT)

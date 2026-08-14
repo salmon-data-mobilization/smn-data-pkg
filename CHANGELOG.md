@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [sdp-0.3.0] - 2026-08-14
+
+### Changed (breaking)
+- **Methods leave the column dictionary**: `column_dictionary.method_iri` is
+  removed. A method describes how an observation was made, not what was
+  observed; it is recorded at the coarsest level where it is still true —
+  `tables.csv` `protocol_iri`/`protocol_citation` (primary; in-package
+  protocols cite the package `README.md`), `tables.csv` `method_iri` (single
+  method, no protocol document), or a data column bound with
+  `sosa:usedProcedure` (row-varying). Migration guidance is in
+  SPECIFICATION.md ("Migration from sdp-0.2.0").
+- **The `metadata/methods.csv` registry is removed** (it was added in the
+  observation-structures work and never released with a dated entry): methods
+  are shared concepts with resolvable IRIs — labels and definitions belong to
+  the vocabulary, version and citation to the protocol. `codes.csv` term IRIs
+  for row-varying procedures resolve directly to shared-vocabulary
+  `sosa:Procedure` concepts.
+
+### Added
+- `column_dictionary.statistical_modifier_iri`: the fifth I-ADOPT component
+  column (`iop:StatisticalModifier`) stating what a reported value represents
+  across the observations it summarizes; recommended vocabulary
+  `smn:StatisticalModifierScheme` (smn 0.0.3).
+- `tables.csv` `protocol_iri`, `protocol_citation`, `method_iri`;
+  `dataset.csv` `protocol_iri`, `protocol_citation` (convenience).
+- Rules: `methods_are_sosa_procedures` rewritten to the three placements;
+  new `statistical_modifier_is_variable_identity`.
+
+### Fixed
+- The sdp-0.2.0 body of work (Frictionless-first schemas, v0.2 profile,
+  `sdp.rules.yaml`, canonical layout) had no dated changelog entry; recorded
+  here retroactively as released 2026-08-11 with the metasalmon 0.2.0
+  re-vendor.
+
 ### Added
 
 - Optional `metadata/methods.csv` registry for SOSA Procedure resources, with fixed procedures associated through the compatibility `column_dictionary.method_iri` field and row-varying procedures associated through `sosa:usedProcedure` observation attributes.

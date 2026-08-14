@@ -1,5 +1,5 @@
 {
-  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json",
   "name": "mixed-grain-stock-recruit",
   "id": "https://example.org/datasets/mixed-grain-stock-recruit",
   "title": "Mixed-grain stock-recruit example",
@@ -29,7 +29,6 @@
       "tables": "metadata/tables.csv",
       "columnDictionary": "metadata/column_dictionary.csv",
       "codes": "metadata/codes.csv",
-      "methods": "metadata/methods.csv",
       "observationStructures": "metadata/structure/observation_structures.csv",
       "observationComponents": "metadata/structure/observation_components.csv"
     }
@@ -58,12 +57,6 @@
       "path": "metadata/codes.csv",
       "profile": "tabular-data-resource",
       "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/codes.schema.json"
-    },
-    {
-      "name": "sdp_methods",
-      "path": "metadata/methods.csv",
-      "profile": "tabular-data-resource",
-      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/methods.schema.json"
     },
     {
       "name": "sdp_observation_structures",
