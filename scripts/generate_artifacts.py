@@ -39,7 +39,6 @@ TABLE_ORDER = (
     "tables",
     "column_dictionary",
     "codes",
-    "methods",
     "observation_structures",
     "observation_components",
 )

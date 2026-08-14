@@ -167,15 +167,6 @@
       "sdp:condition": "Required when any column_dictionary.csv row has column_role equal to categorical."
     },
     {
-      "name": "sdp_methods",
-      "path": "metadata/methods.csv",
-      "profile": "tabular-data-resource",
-      "title": "SDP methods metadata",
-      "description": "Optional registry of procedures associated with measurements in the package.",
-      "schema": "https://salmon-data-mobilization.github.io/smn-data-pkg/schema/frictionless/metadata/methods.schema.json",
-      "sdp:requirement": "optional"
-    },
-    {
       "name": "sdp_observation_structures",
       "path": "metadata/structure/observation_structures.csv",
       "profile": "tabular-data-resource",
