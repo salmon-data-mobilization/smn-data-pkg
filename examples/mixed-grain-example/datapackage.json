@@ -1,5 +1,5 @@
 {
-  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json",
+  "profile": "https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json",
   "name": "mixed-grain-stock-recruit",
   "id": "https://example.org/datasets/mixed-grain-stock-recruit",
   "title": "Mixed-grain stock-recruit example",

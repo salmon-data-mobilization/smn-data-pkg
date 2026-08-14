@@ -7,7 +7,7 @@
 
 This specification defines the required files and CSV schemas (a schema is the list of columns and rules for a file) for a Salmon Data Package (SDP). SDP is a CSV-canonical custom Frictionless Data Package profile that uses Tabular Data Resource resources.
 
-The authoritative machine-readable metadata schemas are the Frictionless Table Schema files in `schema/frictionless/metadata/`. The package profile is `profiles/salmon-data-package/v0.2/profile.json`. Salmon-specific cross-table and domain rules that are not expressible in Table Schema live in `schema/sdp.rules.yaml`.
+The authoritative machine-readable metadata schemas are the Frictionless Table Schema files in `schema/frictionless/metadata/`. The package profile is `profiles/salmon-data-package/v0.3/profile.json`. Salmon-specific cross-table and domain rules that are not expressible in Table Schema live in `schema/sdp.rules.yaml`.
 
 This file does **not** designate project-specific canonical assessment locations; that is handled by each project repo. For SPSR, canonical assessment/mapping artifacts are managed in `Br-Johnson/smn-data-gpt/assessments/spsr`.
 
@@ -74,7 +74,7 @@ The root `datapackage.json` is required for complete/published SDP packages. Bla
 
 Minimum requirements:
 
-- Set `profile` to `https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json`.
+- Set `profile` to `https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json`.
 - Include tabular resources for `metadata/dataset.csv`, `metadata/tables.csv`, `metadata/column_dictionary.csv`, and `metadata/codes.csv` when `codes.csv` is present.
 - Include resources for the paired observation-structure files when those optional files are present.
 - Reference the canonical Frictionless Table Schema URL for each SDP metadata resource.

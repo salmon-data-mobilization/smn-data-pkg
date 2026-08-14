@@ -39,17 +39,17 @@ KNOWN_LICENSES = {
 }
 
 IRI_FIELDS = {
-    "tables": ("observation_unit_iri",),
+    "dataset": ("protocol_iri",),
+    "tables": ("observation_unit_iri", "protocol_iri", "method_iri"),
     "column_dictionary": (
         "unit_iri",
         "term_iri",
         "property_iri",
         "entity_iri",
         "constraint_iri",
-        "method_iri",
+        "statistical_modifier_iri",
     ),
     "codes": ("vocabulary_iri", "term_iri"),
-    "methods": ("method_iri", "protocol_iri"),
     "observation_components": ("component_relation_iri",),
 }
 
@@ -282,67 +282,13 @@ class Validator:
         self.validate_primary_keys(metadata["tables"], columns_by_table)
         self.validate_data_files(metadata["tables"], columns_by_table, data)
         self.validate_codes(metadata, columns_by_table, data)
-        methods_by_key = self.validate_methods(metadata, dataset_id)
         self.validate_observation_structures(
             metadata,
             dataset_id,
             tables_by_key,
             columns_by_key,
-            methods_by_key,
             data,
         )
-
-    def validate_methods(
-        self,
-        metadata: dict[str, list[dict[str, str]]],
-        dataset_id: str | None,
-    ) -> dict[tuple[str, str], dict[str, str]]:
-        methods_by_key: dict[tuple[str, str], dict[str, str]] = {}
-        for row_index, method in enumerate(metadata["methods"], start=2):
-            if dataset_id and method.get("dataset_id") != dataset_id:
-                self.error(
-                    f"metadata/methods.csv row {row_index} dataset_id does not match dataset.csv."
-                )
-            key = (method.get("dataset_id", ""), method.get("method_iri", ""))
-            if key in methods_by_key:
-                self.error(
-                    f"metadata/methods.csv row {row_index} duplicates method_iri "
-                    f"{method.get('method_iri')!r} within dataset {method.get('dataset_id')!r}."
-                )
-            methods_by_key[key] = method
-
-        methods_path = self.package_path / self.schemas["methods"]["sdp:path"]
-        static_references = [
-            column
-            for column in metadata["column_dictionary"]
-            if not is_blank(column.get("method_iri"))
-        ]
-        structures_path = (
-            self.package_path
-            / self.schemas["observation_structures"]["sdp:path"]
-        )
-        if (
-            static_references
-            and structures_path.exists()
-            and not methods_path.exists()
-        ):
-            self.error(
-                "A static column_dictionary.method_iri reference used with the "
-                "observation-structure extension requires metadata/methods.csv."
-            )
-        if methods_path.exists():
-            for row_index, column in enumerate(metadata["column_dictionary"], start=2):
-                method_iri = column.get("method_iri", "")
-                if is_blank(method_iri):
-                    continue
-                key = (column.get("dataset_id", ""), method_iri)
-                if key not in methods_by_key:
-                    self.error(
-                        "metadata/column_dictionary.csv row "
-                        f"{row_index} method_iri is not registered in metadata/methods.csv: "
-                        f"{method_iri!r}."
-                    )
-        return methods_by_key
 
     def validate_observation_structures(
         self,
@@ -350,7 +296,6 @@ class Validator:
         dataset_id: str | None,
         tables_by_key: dict[tuple[str, str], dict[str, str]],
         columns_by_key: dict[tuple[str, str, str], dict[str, str]],
-        methods_by_key: dict[tuple[str, str], dict[str, str]],
         data: PackageData,
     ) -> None:
         structures_path = self.package_path / self.schemas["observation_structures"]["sdp:path"]
@@ -508,7 +453,6 @@ class Validator:
                     measure_components[0],
                     metadata,
                     columns_by_key,
-                    methods_by_key,
                     data,
                 )
 
@@ -532,7 +476,6 @@ class Validator:
         measure_component: dict[str, str],
         metadata: dict[str, list[dict[str, str]]],
         columns_by_key: dict[tuple[str, str, str], dict[str, str]],
-        methods_by_key: dict[tuple[str, str], dict[str, str]],
         data: PackageData,
     ) -> None:
         table_id = structure_key[1]
@@ -589,11 +532,11 @@ class Validator:
                         f"{code_value!r} in column {column_name!r} requires a term_iri in "
                         "metadata/codes.csv."
                     )
-                elif (structure_key[0], method_iri) not in methods_by_key:
+                elif not is_absolute_iri(method_iri):
                     self.error(
                         f"Observation structure {structure_key!r} sosa:usedProcedure code "
-                        f"{code_value!r} term_iri is not registered in metadata/methods.csv: "
-                        f"{method_iri!r}."
+                        f"{code_value!r} term_iri must be an absolute IRI resolving to a "
+                        f"shared-vocabulary sosa:Procedure concept: {method_iri!r}."
                     )
 
         component_columns = {
@@ -666,11 +609,11 @@ class Validator:
                         f"{code_value!r} in column {column_name!r} requires a term_iri in "
                         "metadata/codes.csv."
                     )
-                elif (structure_key[0], method_iri) not in methods_by_key:
+                elif not is_absolute_iri(method_iri):
                     self.error(
                         f"Observation structure {structure_key!r} sosa:usedProcedure code "
-                        f"{code_value!r} term_iri is not registered in metadata/methods.csv: "
-                        f"{method_iri!r}."
+                        f"{code_value!r} term_iri must be an absolute IRI resolving to a "
+                        f"shared-vocabulary sosa:Procedure concept: {method_iri!r}."
                     )
 
     def validate_safe_table_path(self, file_name: str, location: str) -> Path | None:
