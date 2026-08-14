@@ -18,10 +18,13 @@ This example package contains metadata for a sample of coho escapement records f
 `metadata/dataset.csv` also demonstrates optional discovery/export fields (`contact_org`, `contact_position`, `update_frequency`, `topic_categories`, `keywords`, `security_classification`) that support downstream catalog export (for example EDH/GeoNetwork) without requiring source database schema changes.
 
 This example shows semantic fields on one measurement column. `property_iri`,
-`entity_iri`, and optional `constraint_iri` are I-ADOPT decomposition fields;
-`term_iri` is the compound-variable pointer and `unit_iri` identifies the unit.
-The compatibility field `method_iri` is a separate static SOSA Procedure link,
-not an I-ADOPT component.
+`entity_iri`, optional `constraint_iri`, and optional
+`statistical_modifier_iri` are I-ADOPT decomposition fields; `term_iri` is the
+compound-variable pointer and `unit_iri` identifies the unit. The method (an
+aerial survey count) is recorded once at the **table** level
+(`tables.csv.method_iri`) because it applies to the whole observation unit —
+methods describe how observations were made, not what was observed, so they
+never appear in the column dictionary (sdp-0.3.0).
 
 ## Usage
 

@@ -1,6 +1,6 @@
 # Salmon Data Package Specification
 
-**Version**: sdp-0.2.0  
+**Version**: sdp-0.3.0
 **Author**: Brett Johnson, Data Stewardship Unit (DFO Pacific Region Science Branch)
 
 ## Scope
@@ -19,7 +19,6 @@ The **canonical** SDP package layout is:
 - `metadata/tables.csv` - table-level metadata.
 - `metadata/column_dictionary.csv` - column-level metadata.
 - `metadata/codes.csv` - controlled code lists (a controlled vocabulary is a defined list of allowed values) when categorical columns exist.
-- `metadata/methods.csv` - optional registry of procedures associated with measurements.
 - `metadata/structure/observation_structures.csv` and `metadata/structure/observation_components.csv` - optional paired files that declare measure-specific logical grain in wide or mixed-grain tables.
 - One or more data files referenced from `metadata/tables.csv` (typically under `data/`).
 
@@ -52,7 +51,6 @@ Canonical directory layout:
     tables.csv
     column_dictionary.csv
     codes.csv        # omit when not needed
-    methods.csv      # optional
     structure/       # optional; both files are present together
       observation_structures.csv
       observation_components.csv
@@ -78,7 +76,7 @@ Minimum requirements:
 
 - Set `profile` to `https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json`.
 - Include tabular resources for `metadata/dataset.csv`, `metadata/tables.csv`, `metadata/column_dictionary.csv`, and `metadata/codes.csv` when `codes.csv` is present.
-- Include resources for `metadata/methods.csv` and the paired observation-structure files when those optional files are present.
+- Include resources for the paired observation-structure files when those optional files are present.
 - Reference the canonical Frictionless Table Schema URL for each SDP metadata resource.
 - Include one data resource for each row in `metadata/tables.csv`.
 - Set each resource path to the matching `file_name` value from `metadata/tables.csv`.
@@ -144,17 +142,17 @@ A measurement column (a column whose values are the observed or computed quantit
 
 `constraint_iri` is optional and may contain multiple semicolon-separated IRIs.
 
-`method_iri` is retained for compatibility as an optional **static SOSA
-Procedure association**: it applies to every non-empty value in that measurement
-column. It is not an I-ADOPT variable component. When `metadata/methods.csv` is
-present, every non-empty `method_iri` must resolve to
-a method row in the same dataset. Packages that use the observation-structure
-extension and a static `method_iri` must include that registry. Legacy packages
-without either new extension remain valid.
+`statistical_modifier_iri` is optional and states what the reported value
+represents across the observations it summarizes — mean, maximum, total, peak.
+It resolves to an I-ADOPT `StatisticalModifier` concept (recommended
+vocabulary: `smn:StatisticalModifierScheme`). A statistical modifier is part
+of **variable identity**: daily mean and daily maximum temperature are
+different variables. A method is never recorded here.
 
-I-ADOPT variable decomposition uses Property, Entity, Constraint, and optional
-Statistical Modifier roles. I-ADOPT does not define a Method or Procedure
-component. Method provenance is modelled separately using SOSA.
+The column dictionary carries **no method field** (`method_iri` was removed
+in sdp-0.3.0): a method describes how an observation was made, not what was
+observed, which is also why I-ADOPT defines no Method component. Method
+provenance is modelled separately using SOSA — see *Methods and procedures*.
 
 ## Measure-specific observation structures
 
@@ -197,22 +195,59 @@ I-ADOPT constraint even when the label mentions it.
 
 ## Methods and procedures
 
-`metadata/methods.csv` is an optional procedure registry. Each row identifies a
-resource treated as `sosa:Procedure`, with a label and description plus optional
-version, protocol IRI, and citation. `method_iri` is unique within the dataset.
+**The one rule: a method describes how an observation was made, not what was
+observed. Record it at the coarsest level where it is still true.** Recording
+a method more finely than it actually varies is not more precise — it is
+repetition that will drift out of sync.
 
-Use one of two association patterns:
+The concept model is **Protocol > Method** (following
+PNAMP/monitoringresources.org). A *protocol* is a documented plan someone else
+could follow; it specifies which methods apply to which measurements, and it
+is cited, not executed. A *method* is a technique named by a protocol and
+applied to produce a value, with two subtypes rather than parallel concepts:
+observation methods (how it was observed) and analytical methods (how the
+number was derived). Every method or protocol IRI resolves to a shared
+vocabulary concept typed as a `sosa:Procedure`; there is **no per-package
+method registry** — labels and definitions belong to the vocabulary the IRI
+resolves to, and version and citation belong to the protocol.
 
-- Put a fixed procedure IRI in `column_dictionary.method_iri` when it applies to
-  every non-empty value of one measurement column.
-- For row-varying procedures, bind a categorical column as an observation
-  `attribute` with `component_relation_iri` equal to
-  `http://www.w3.org/ns/sosa/usedProcedure`. Every enumerated code in that
-  column, including currently unobserved allowed values, has a `codes.csv`
-  `term_iri` resolving to `methods.csv`.
+A protocol does not have to be external. Three forms, in descending order of
+preference:
+
+| Form | How it is referenced |
+|---|---|
+| **Published** — DOI or stable URL | `protocol_iri` points at it |
+| **In-package** — described in the package's own `README.md` | `protocol_citation` names the section; `protocol_iri` may be omitted |
+| **Undocumented** | Say nothing. An absent protocol is honest |
+
+Placements, decided by one question — *is the method the same at this level?*
+— asked coarsest-first:
+
+| Level | Fields | Use when |
+|---|---|---|
+| **Table** (observation unit) | `tables.csv` `protocol_iri`, `protocol_citation` | **Start here.** A protocol governs a kind of observation event — a site visit — which is what a tidy table is |
+| **Dataset** | `dataset.csv` `protocol_iri`, `protocol_citation` | Convenience only: the same protocol governs every table |
+| **Table** | `tables.csv` `method_iri` | A single method applies and there is no protocol document to cite |
+| **Row** | A data column bound with `sosa:usedProcedure` | The method varies from row to row — it is data, not metadata |
+
+For row-varying procedures, bind a categorical column as an observation
+`attribute` with `component_relation_iri` equal to
+`http://www.w3.org/ns/sosa/usedProcedure`. Every enumerated code in that
+column, including currently unobserved allowed values, has a `codes.csv`
+`term_iri` resolving to a shared-vocabulary `sosa:Procedure` concept.
 
 Transformation scripts, execution environments, parameter files, and detailed
-run provenance belong under `reproducibility/`, not in `methods.csv`.
+run provenance belong under `reproducibility/`.
+
+### Migration from sdp-0.2.0
+
+A `method_iri` on a measurement column becomes the table's `method_iri` when
+all measurement columns in the table agree. When they disagree, migration
+**stops and reports** rather than guessing: the contributor decides whether to
+split the table, cite a protocol, or move the method into the data. A
+`REVIEW:`-marked value is dropped, not migrated. `metadata/methods.csv` is
+removed; its labels and descriptions belong in the shared vocabulary, its
+version and citation beside `protocol_iri`.
 
 ## Codes rules
 

@@ -1,4 +1,4 @@
-dataset_id,table_id,column_name,column_label,column_description,column_role,value_type,required,unit_label,unit_iri,term_iri,term_type,property_iri,entity_iri,constraint_iri,method_iri
+dataset_id,table_id,column_name,column_label,column_description,column_role,value_type,required,unit_label,unit_iri,term_iri,term_type,property_iri,entity_iri,constraint_iri,statistical_modifier_iri
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,POP_ID,Population ID,NuSEDS population identifier,identifier,string,TRUE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,POPULATION,Population name,Population name with area context,attribute,string,FALSE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,AREA,PFMA area,Pacific Fishery Management Area code,attribute,string,FALSE,,,,,,,,
@@ -6,7 +6,7 @@ dataset_id,table_id,column_name,column_label,column_description,column_role,valu
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,ANALYSIS_YR,Run year,Brood/run year of escapement estimate,temporal,integer,TRUE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,SPECIES,Species code,Species common name/code (Coho),categorical,string,TRUE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,RUN_TYPE,Run timing,"Run timing category (e.g., Fall)",categorical,string,FALSE,,,,,,,,
-10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,NATURAL_SPAWNERS_TOTAL,Total natural spawners,Estimated total natural-origin spawners,measurement,integer,FALSE,individual,https://qudt.org/vocab/unit/INDIV,https://w3id.org/example/salmon#AbsoluteSpawnerAbundance,skos_concept,https://w3id.org/smn/Abundance,https://w3id.org/gcdfo/salmon#ConservationUnit,https://w3id.org/example/salmon#WildOriginConstraint,https://w3id.org/gcdfo/salmon#AerialSurveyCount
+10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,NATURAL_SPAWNERS_TOTAL,Total natural spawners,Estimated total natural-origin spawners,measurement,integer,FALSE,individual,https://qudt.org/vocab/unit/INDIV,https://w3id.org/example/salmon#AbsoluteSpawnerAbundance,skos_concept,https://w3id.org/smn/Abundance,https://w3id.org/gcdfo/salmon#ConservationUnit,https://w3id.org/example/salmon#WildOriginConstraint,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,ENUMERATION_METHODS,Enumeration methods,Field methods applied (may be multiple),categorical,string,FALSE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,ESTIMATE_METHOD,Estimate method,Analytical method used for estimate,categorical,string,FALSE,,,,,,,,
 10.1234/nuseds_fraser_coho_sample,nuseds_fraser_coho,ESTIMATE_CLASSIFICATION,Estimate classification,Classification of abundance estimate,categorical,string,FALSE,,,,,,,,
