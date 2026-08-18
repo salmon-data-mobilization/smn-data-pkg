@@ -37,7 +37,6 @@ Thumbs.db
 *.tmp
 *.log
 
-AGENTS.md
 docs/plans/*
 !docs/plans/fdp-plan.md
 .cursorignore
