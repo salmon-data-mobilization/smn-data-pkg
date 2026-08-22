@@ -80,18 +80,15 @@ Adopting the Salmon Data Package specification enables a range of capabilities f
 
 ## Quick Start
 
-- Follow `docs/quickstart.md` for the step-by-step walkthrough.
 - Download and fill in `templates/salmon-data-package-template.zip` for a blank package template.
 - Use `examples/minimal-example/` as a template for the canonical `metadata/` + `data/` package layout.
 - Use `examples/mixed-grain-example/` to see measure-specific dimensions, SOSA procedures, and the optional `reproducibility/` sidecar layout.
 - Use the Frictionless Table Schema files under `schema/frictionless/metadata/` as the authoritative metadata schemas, and `docs/field-reference.md` for a generated field reference.
-- Use the [published SDP v0.2 profile](https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json) for canonical public schema and rules URLs.
+- Use the [published SDP v0.3 profile](https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.3/profile.json) for canonical public schema and rules URLs (the [v0.2 profile](https://salmon-data-mobilization.github.io/smn-data-pkg/profiles/salmon-data-package/v0.2/profile.json) remains published as a frozen contract for already-released packages).
 - Use `SPECIFICATION.md` for the rules that define validity.
 - Run `python3 scripts/validate_package.py examples/minimal-example` for strict publication validation once dependencies from `requirements.txt` are installed.
 
 For I-ADOPT (a standard for describing variables by parts) and SOSA procedure guidance, see `docs/i-adopt-integration-guide.md`. For mixed-grain tables and W3C Data Cube alignment, see `docs/observation-structure-guide.md`.
-
-For EDH/GeoNetwork exporter implementation guidance, see `docs/edh-hnap-mapping.md`.
 
 ## Project Structure
 
@@ -105,8 +102,9 @@ sdp-spec/
 │   └── sdp.rules.yaml      # SDP rules not expressible as Table Schema fields
 ├── profiles/
 │   └── salmon-data-package/
-│       └── v0.2/
-│           └── profile.json # SDP Frictionless package profile
+│       ├── v0.2/           # Frozen published contract for released packages
+│       └── v0.3/
+│           └── profile.json # Current SDP Frictionless package profile
 ├── templates/
 │   ├── salmon-data-package-template/
 │   └── salmon-data-package-template.zip
@@ -115,16 +113,13 @@ sdp-spec/
 │       └── README.md      # Human-authored source for the generated template README
 ├── docs/                   # Guides and background documentation
 │   ├── field-reference.md  # Generated from Frictionless metadata schemas
-│   ├── quickstart.md       # Exporter-first setup and package assembly
 │   ├── observation-structure-guide.md # Mixed-grain measure bindings
 │   ├── i-adopt-integration-guide.md # I-ADOPT/SOSA role boundary
-│   ├── edh-hnap-mapping.md # SDP dataset metadata to HNAP XML mapping guidance
 │   └── ...                 # Additional non-normative implementation guides
 ├── examples/               # Example packages
 │   ├── minimal-example/
 │   └── mixed-grain-example/
 ├── CHANGELOG.md            # Version history
-├── LICENSE                 # License terms
 └── .github/
     └── workflows/          # CI/CD workflows
 ```

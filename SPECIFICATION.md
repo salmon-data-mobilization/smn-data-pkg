@@ -267,10 +267,7 @@ version and citation beside `protocol_iri`.
 
 These documents provide guidance and implementation detail but do not change validity rules:
 
-- `docs/quickstart.md`
-- `docs/implementation-guide.md`
+- `docs/field-reference.md` (generated from the Frictionless metadata schemas)
 - `docs/i-adopt-integration-guide.md`
 - `docs/observation-structure-guide.md`
 - `docs/adr/0001-observation-structure-and-procedure-metadata.md`
-- `docs/sdp-profile-schema-guide.md`
-- `docs/edh-hnap-mapping.md`

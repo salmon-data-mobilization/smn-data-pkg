@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The four `ObservationStructureValidationTests` that still asserted the
+  pre-0.3.0 method registry (`metadata/methods.csv`, dictionary `method_iri`)
+  now assert the sdp-0.3.0 shape: enumerated procedure codes need absolute
+  shared-vocabulary term IRIs, the static method reference is
+  `tables.csv method_iri`, the dictionary rejects a `method_iri` column, and
+  the descriptor must list the structure pair when present. The suite is
+  green again (23/23); the validator itself was already correct.
+- The generated template README no longer instructs deleting a
+  `metadata/methods.csv` the template does not contain, and
+  `generate_artifacts.py` now fails (`--write` and `--check`) when the README
+  source names a `metadata/*.csv` absent from the generated template — the
+  previous check copied the README verbatim and could not see stale prose.
+- Dead documentation references removed or repointed: `docs/quickstart.md`
+  (README, SPECIFICATION, entrypoints → README "Quick Start"),
+  `docs/implementation-guide.md` (SPECIFICATION, entrypoints → `AGENTS.md`),
+  `docs/edh-hnap-mapping.md` (README, SPECIFICATION → removed),
+  `docs/sdp-profile-schema-guide.md` (SPECIFICATION → removed), and
+  `schema/frictionless/metadata/methods.schema.json` (entrypoints → the
+  sdp-0.3.0 method placement in `tables.schema.json`/`codes.schema.json`).
+  Stale v0.2 profile pointers in README and entrypoints now point at the
+  current v0.3 profile, with v0.2 marked as a frozen published contract.
+- Both shipped examples now declare `spec_version`/`specVersion` `sdp-0.3.0`
+  (they declared `sdp-0.2.0` at the sdp-0.3.0 tag and nothing noticed,
+  because no tool reads the field); the dataset schema's `spec_version`
+  example string moved with them.
+
+### Added
+- Minimal GitHub Actions CI (`.github/workflows/ci.yml`): the unit tests and
+  `generate_artifacts.py --check` run on every push to `main` and every pull
+  request. No release automation.
+
 ## [sdp-0.3.0] - 2026-08-14
 
 ### Changed (breaking)

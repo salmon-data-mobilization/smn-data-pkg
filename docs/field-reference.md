@@ -37,7 +37,7 @@ One row per dataset.
 | provenance_note | string | optional | Narrative about data lineage. |  |
 | created | datetime | optional | Timestamp when the dataset was created. |  |
 | modified | datetime | optional | Timestamp when the dataset was last modified. |  |
-| spec_version | string | optional | SDP specification version. | Examples: `sdp-0.2.0` |
+| spec_version | string | optional | SDP specification version. | Examples: `sdp-0.3.0` |
 | protocol_iri | string | optional | Convenience only: the protocol IRI when the same protocol governs every table. The primary placement is tables.csv. |  |
 | protocol_citation | string | optional | Convenience only: the protocol citation when uniform across tables. |  |
 
