@@ -1,0 +1,36 @@
+# Minimal CI: run the unit tests and the generated-artifact check on every
+# push to main and every pull request. Added 2026-08-21 because a 4-test-red
+# suite sat unnoticed on main after the sdp-0.3.0 method-model change — this
+# repo had no workflow at all to run it (metasalmon hub backlog #103).
+# Deliberately no release automation.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests and generated-artifact check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt pytest
+
+      - name: Run test suite
+        run: |
+          python -m pytest tests/
+
+      - name: Check generated artifacts are in sync
+        run: |
+          python scripts/generate_artifacts.py --check

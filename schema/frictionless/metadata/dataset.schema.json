@@ -165,7 +165,7 @@
       "name": "spec_version",
       "type": "string",
       "description": "SDP specification version.",
-      "example": "sdp-0.2.0"
+      "example": "sdp-0.3.0"
     },
     {
       "name": "protocol_iri",

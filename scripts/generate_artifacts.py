@@ -9,6 +9,7 @@ import difflib
 import filecmp
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -268,7 +269,7 @@ def field_examples(field: dict) -> list[str]:
     return [example] if example else []
 
 
-def render_template_readme(root: Path = ROOT) -> str:
+def render_template_readme(bundle: dict, root: Path = ROOT) -> str:
     source_path = repo_path(root, TEMPLATE_SOURCE_DIR) / "README.md"
     if not source_path.exists():
         raise FileNotFoundError(
@@ -280,6 +281,29 @@ def render_template_readme(root: Path = ROOT) -> str:
     if "{{" in content or "}}" in content:
         raise ValueError(
             "Template README source is plain Markdown; placeholders are not supported."
+        )
+
+    # The README is authored prose copied verbatim, so without this guard
+    # `--check` compares generated output against a byte-for-byte copy of
+    # itself and reports "in sync" for any text whatsoever — which is how it
+    # kept instructing users to delete a `metadata/methods.csv` that
+    # sdp-0.3.0 had removed from the template. Verify that every
+    # `metadata/...*.csv` path the prose names is a file the generator
+    # actually emits. Covered: metadata-prefixed CSV references. Not covered:
+    # bare filenames without the `metadata/` prefix and non-CSV prose claims
+    # — always write template metadata files with their full path. Retire
+    # this guard only if the README's file list becomes derived from the
+    # template tree instead of authored prose.
+    template_metadata_paths = {
+        schema["sdp:path"] for schema in bundle["metadata_schemas"].values()
+    }
+    referenced_paths = set(re.findall(r"metadata/[A-Za-z0-9_\-./]+\.csv", content))
+    stale_references = sorted(referenced_paths - template_metadata_paths)
+    if stale_references:
+        raise ValueError(
+            "Template README source names metadata files the generated "
+            f"template does not contain: {stale_references}. Fix "
+            "template-source/salmon-data-package-template/README.md."
         )
     return content
 
@@ -390,7 +414,7 @@ def generate(bundle: dict, root: Path = ROOT) -> None:
         profile_path,
         json.dumps(render_profile(bundle), indent=2, ensure_ascii=False) + "\n",
     )
-    write_text(template_dir / "README.md", render_template_readme(root=root))
+    write_text(template_dir / "README.md", render_template_readme(bundle, root=root))
     write_text(template_dir / "data" / "README.md", render_data_readme())
 
     for table_name in TABLE_ORDER:

@@ -205,56 +205,65 @@ class ObservationStructureValidationTests(unittest.TestCase):
 
         self.assertHasError("sosa:usedProcedure code")
 
-    def test_every_enumerated_procedure_code_requires_a_registered_method(self) -> None:
+    def test_every_enumerated_procedure_code_requires_an_absolute_method_iri(self) -> None:
+        # sdp-0.3.0 removed the metadata/methods.csv registry: an enumerated
+        # sosa:usedProcedure code is valid when its term_iri is an absolute
+        # shared-vocabulary IRI. The declared code list is the complete allowed
+        # procedure domain, so a code no data row uses is still validated.
         path = self.package_path / "metadata" / "codes.csv"
         rows = read_csv(path)
         extra = dict(rows[0])
-        extra["code_value"] = "unused_unregistered_method"
-        extra["code_label"] = "Unused unregistered method"
-        extra["term_iri"] = "https://example.org/methods/not-registered"
+        extra["code_value"] = "unused_relative_method"
+        extra["code_label"] = "Unused method with a relative IRI"
+        extra["term_iri"] = "methods/not-absolute"
         rows.append(extra)
         write_csv(path, rows, rows[0].keys())
 
-        self.assertHasError("not registered in metadata/methods.csv")
+        self.assertHasError(
+            "must be an absolute IRI resolving to a shared-vocabulary sosa:Procedure"
+        )
 
-    def test_static_method_reference_must_resolve_when_registry_is_present(self) -> None:
+    def test_static_method_reference_must_be_an_absolute_iri(self) -> None:
+        # sdp-0.3.0 moved the static method reference from the column
+        # dictionary to tables.csv method_iri; there is no local registry to
+        # resolve against, so the structural contract is IRI shape.
+        path = self.package_path / "metadata" / "tables.csv"
+        rows = read_csv(path)
+        for row in rows:
+            if row["table_id"] == "stock_recruit":
+                row["method_iri"] = "methods/not-absolute"
+        write_csv(path, rows, rows[0].keys())
+
+        self.assertHasError("method_iri must be an absolute IRI")
+
+    def test_column_dictionary_rejects_removed_method_iri_column(self) -> None:
+        # sdp-0.3.0 deleted the column_dictionary method_iri slot. The strict
+        # header contract is what keeps it deleted: a package that still
+        # carries the pre-0.3.0 column must be rejected, not silently ignored.
         path = self.package_path / "metadata" / "column_dictionary.csv"
         rows = read_csv(path)
         for row in rows:
-            if row["column_name"] == "total_spawners":
-                row["method_iri"] = "https://example.org/methods/not-registered"
-        write_csv(path, rows, rows[0].keys())
+            row["method_iri"] = ""
+        rows[0]["method_iri"] = "https://example.org/methods/mark-recapture"
+        write_csv(path, rows, list(rows[0].keys()))
 
-        self.assertHasError("method_iri is not registered")
-
-    def test_static_method_reference_requires_registry(self) -> None:
-        (self.package_path / "metadata" / "methods.csv").unlink()
-        descriptor_path = self.package_path / "datapackage.json"
-        descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
-        descriptor["resources"] = [
-            resource
-            for resource in descriptor["resources"]
-            if resource.get("path") != "metadata/methods.csv"
-        ]
-        descriptor["sdp"]["metadata"].pop("methods")
-        descriptor_path.write_text(
-            json.dumps(descriptor, indent=2) + "\n",
-            encoding="utf-8",
-        )
-
-        self.assertHasError("requires metadata/methods.csv")
+        self.assertHasError("column_dictionary.csv header must exactly be")
 
     def test_descriptor_must_list_present_extended_metadata(self) -> None:
+        # The optional extended metadata in sdp-0.3.0 is the structure pair;
+        # when the files are present on disk the descriptor must list them.
         path = self.package_path / "datapackage.json"
         descriptor = json.loads(path.read_text(encoding="utf-8"))
         descriptor["resources"] = [
             resource
             for resource in descriptor["resources"]
-            if resource.get("path") != "metadata/methods.csv"
+            if resource.get("path") != "metadata/structure/observation_structures.csv"
         ]
         path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
 
-        self.assertHasError("resources must include metadata/methods.csv")
+        self.assertHasError(
+            "resources must include metadata/structure/observation_structures.csv"
+        )
 
     def test_bound_attributes_are_invariant_at_declared_grain(self) -> None:
         path = self.package_path / "data" / "stock_recruit.csv"
