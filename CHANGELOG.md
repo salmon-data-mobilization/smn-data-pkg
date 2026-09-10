@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Descriptor `schema.fields` entries may carry the column dictionary's
+  semantic annotation keys — `unit_iri`, `term_iri`, `term_type`,
+  `property_iri`, `entity_iri`, `constraint_iri`,
+  `statistical_modifier_iri` — beside the core `name`/`title`/`description`/
+  `type`/`constraints` projection, named as the dictionary column with the
+  dictionary value unchanged (hub backlog #90, ruled 2026-08-24: permit the
+  keys). Both metasalmon and metasalmonpy project them, and
+  `scripts/validate_package.py` compared the whole entry with `!=`, so every
+  semantically annotated package failed strict publication validation while
+  the only fixture under test carried no IRIs. The permitted keys are now
+  derived from `column_dictionary.schema.json` — every dictionary column the
+  core projection does not already express — rather than from a hand-written
+  list, so a column added to the dictionary is permitted without editing the
+  script. An unknown key is still rejected, a carried value must equal the
+  CSV cell, and the core keys keep their exact comparison; the per-entry
+  errors now name the key that differs. `SPECIFICATION.md` states the rule
+  under "Data resource field entries".
+
 ### Fixed
 - The four `ObservationStructureValidationTests` that still asserted the
   pre-0.3.0 method registry (`metadata/methods.csv`, dictionary `method_iri`)
