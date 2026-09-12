@@ -1128,17 +1128,21 @@ def descriptor_field_issues(
 ) -> list[str]:
     """Why a descriptor field entry disagrees with its dictionary-derived form.
 
-    Core keys must match exactly, as before. Any other key must be a
-    permitted annotation key (the descriptor MAY carry it) and, when carried,
-    must equal the dictionary value; a blank dictionary cell may be carried
-    as an empty string or null. A key with no dictionary column behind it is
-    an error, which is what the exact comparison this replaced was for.
+    Core keys must match exactly, as before, presence included: a core key
+    the projection omits (`constraints` on a non-required column) must be
+    absent, not null, since `.get()` alone would read null as absent and
+    Table Schema requires a carried `constraints` to be an object. Any other
+    key must be a permitted annotation key (the descriptor MAY carry it) and,
+    when carried, must equal the dictionary value; a blank dictionary cell
+    may be carried as an empty string or null. A key with no dictionary
+    column behind it is an error, which is what the exact comparison this
+    replaced was for.
     """
     if not isinstance(field, dict):
         return ["must be an object"]
     issues: list[str] = []
     for key in DESCRIPTOR_CORE_KEYS:
-        if field.get(key) != expected.get(key):
+        if (key in field) != (key in expected) or field.get(key) != expected.get(key):
             wanted = "absent" if key not in expected else repr(expected[key])
             issues.append(f"{key} must be {wanted}; found {field.get(key)!r}")
     for key, actual in field.items():

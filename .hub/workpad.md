@@ -193,3 +193,50 @@ entry → "must be an object"; an unknown key → named, with the permitted list
 - The original "schema.fields must match ...-derived fields" message is kept
   for order/count mismatch so existing readers of the validator output (the
   backlog entry quotes it) still find it. Retires when nothing cites it.
+
+## Follow-up: review finding (P3), `"constraints": null` read as absent
+
+**Finding** (independent review of PR #7, reproduced here). `descriptor_field_issues()`
+compared each core key with `field.get(key) != expected.get(key)`, so an
+entry carrying `"constraints": null` for a **non-required** column compared
+equal to an expected entry with no `constraints` key. The whole-entry `!=`
+it replaced rejected that entry, the spec table this PR adds says "otherwise
+the key is absent", and Table Schema requires `constraints` to be an object
+— so the branch enforced less than the spec it introduced, and a
+Frictionless-invalid entry passed strict publication validation.
+
+Reproduction: minimal example copied to scratch, `"constraints": null` set
+on the `POPULATION` entry (`required = FALSE`).
+
+    origin/main (47f0e81) validator:
+      - datapackage.json resource data/nuseds-fraser-coho-sample.csv schema.fields must match metadata/column_dictionary.csv-derived fields.   exit 1
+    branch before the fix:
+      Strict SDP validation passed: .../constraints-null-pkg                exit 0
+
+**Fix.** `descriptor_field_issues()` compares presence as well as value for
+each core key — `(key in field) != (key in expected) or field.get(key) !=
+expected.get(key)` — and reuses the existing "must be absent; found ..."
+message; the docstring says why. The annotation-key branch (a blank cell
+carried as `""` or `null`) is untouched and keeps its retirement note above.
+`SPECIFICATION.md` is unchanged: it already states the rule the fix now
+enforces. `CHANGELOG.md`: one sentence added to the existing `[Unreleased]`
+bullet.
+
+**Tests** (`tests/test_validate_package.py`, 33 → 35, plus a `descriptor_field()`
+reader helper): `test_descriptor_constraints_null_is_not_absent` (null on
+`POPULATION` is rejected with a message naming the entry and the key) and
+`test_descriptor_required_column_still_carries_constraints` (`POP_ID` is
+required, its entry carries `{"required": true}`, the package passes).
+
+    RED (tests written, validator unfixed):
+      FAILED tests/test_validate_package.py::StrictValidationTests::test_descriptor_constraints_null_is_not_absent
+      AssertionError: Expected error containing 'schema.fields entry POPULATION: constraints must be absent; found None'; found []
+      1 failed, 34 passed
+    GREEN (validator fixed):
+      python3 -m pytest tests -q                       → 35 passed
+      reproduction package:
+      - datapackage.json resource data/nuseds-fraser-coho-sample.csv schema.fields entry POPULATION: constraints must be absent; found None.   exit 1
+      python3 scripts/validate_package.py examples/minimal-example      → passed
+      python3 scripts/validate_package.py examples/mixed-grain-example  → passed
+      python3 scripts/generate_artifacts.py --check    → in sync
+      git diff --check                                 → clean

@@ -164,6 +164,30 @@ class StrictValidationTests(unittest.TestCase):
             "schema.fields must match metadata/column_dictionary.csv-derived fields"
         )
 
+    def test_descriptor_constraints_null_is_not_absent(self) -> None:
+        # B-90 review follow-up: the spec table says `constraints` is absent
+        # for a non-required column, and Table Schema says a carried
+        # `constraints` must be an object. Comparing the core keys through
+        # .get() made `null` equal to absent, so an entry the whole-entry
+        # comparison had rejected passed strict validation. Presence is
+        # compared as well as value, and the error names the entry and key.
+        edit_descriptor_field(self.package_path, "POPULATION", {"constraints": None})
+
+        self.assertHasError(
+            "schema.fields entry POPULATION: constraints must be absent; found None"
+        )
+
+    def test_descriptor_required_column_still_carries_constraints(self) -> None:
+        # The presence check leaves the required side alone: POP_ID is
+        # required in the dictionary, its entry carries {"required": true},
+        # and the package passes.
+        self.assertEqual("TRUE", dictionary_row(self.package_path, "POP_ID")["required"])
+        self.assertEqual(
+            {"required": True}, descriptor_field(self.package_path, "POP_ID")["constraints"]
+        )
+
+        self.assertEqual([], self.errors())
+
     def assertHasError(self, expected: str) -> None:
         errors = self.errors()
         if not any(expected in error for error in errors):
@@ -540,6 +564,14 @@ def set_dictionary_cells(package_path: Path, column_name: str, cells: dict[str, 
         if row["column_name"] == column_name:
             row.update(cells)
     write_csv(path, rows, rows[0].keys())
+
+
+def descriptor_field(package_path: Path, column_name: str) -> dict:
+    descriptor = json.loads((package_path / "datapackage.json").read_text(encoding="utf-8"))
+    for field in data_resource(descriptor)["schema"]["fields"]:
+        if field.get("name") == column_name:
+            return field
+    raise AssertionError(f"no datapackage.json field entry for {column_name}")
 
 
 def edit_descriptor_field(package_path: Path, column_name: str, keys: dict) -> None:

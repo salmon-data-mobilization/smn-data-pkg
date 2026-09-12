@@ -24,7 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   script. An unknown key is still rejected, a carried value must equal the
   CSV cell, and the core keys keep their exact comparison; the per-entry
   errors now name the key that differs. `SPECIFICATION.md` states the rule
-  under "Data resource field entries".
+  under "Data resource field entries". A core key the projection omits must
+  be absent, not `null`: `"constraints": null` on a non-required column is
+  rejected, as the whole-entry comparison rejected it (Table Schema
+  `constraints` must be an object).
 
 ### Fixed
 - The four `ObservationStructureValidationTests` that still asserted the
