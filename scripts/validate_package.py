@@ -1133,10 +1133,10 @@ def descriptor_field_issues(
     absent, not null, since `.get()` alone would read null as absent and
     Table Schema requires a carried `constraints` to be an object. Any other
     key must be a permitted annotation key (the descriptor MAY carry it) and,
-    when carried, must equal the dictionary value; a blank dictionary cell
-    may be carried as an empty string or null. A key with no dictionary
-    column behind it is an error, which is what the exact comparison this
-    replaced was for.
+    when carried, must equal the dictionary value exactly, untrimmed; a
+    blank dictionary cell may be carried as an empty string or null. A key
+    with no dictionary column behind it is an error, which is what the exact
+    comparison this replaced was for.
     """
     if not isinstance(field, dict):
         return ["must be an object"]
@@ -1154,9 +1154,18 @@ def descriptor_field_issues(
                 f"a field entry may carry only {annotation_keys}"
             )
             continue
+        # The expected value is the CSV cell as read_metadata_csv() loaded it:
+        # normalize_cell() strips every metadata cell on read (and
+        # descriptor_field_from_column() strips it again), so the stripped
+        # cell is the only rendering of the CSV value this validator holds,
+        # and it is the baseline. The carried side is compared exactly,
+        # untrimmed: the spec says the value is carried unchanged, and
+        # stripping it here let " <iri> " pass although it is neither the
+        # cell nor an absolute IRI (B-90 review follow-up). A blank cell may
+        # be carried as "" or null, nothing else.
         expected_value = expected.get(key, "")
         carried = "" if actual is None else actual
-        if not isinstance(carried, str) or normalize_cell(carried) != expected_value:
+        if not isinstance(carried, str) or carried != expected_value:
             issues.append(
                 f"{key} must equal the metadata/column_dictionary.csv value "
                 f"{expected_value!r}; found {actual!r}"

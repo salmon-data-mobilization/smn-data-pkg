@@ -240,3 +240,37 @@ required, its entry carries `{"required": true}`, the package passes).
       python3 scripts/validate_package.py examples/mixed-grain-example  → passed
       python3 scripts/generate_artifacts.py --check    → in sync
       git diff --check                                 → clean
+
+**Second finding (Codex, P2), carried annotation values compared after
+trimming.** `descriptor_field_issues()` compared `normalize_cell(carried)`
+to the CSV value, so `" https://qudt.org/vocab/unit/INDIV "` passed although
+it differs from the cell and is not an absolute IRI, while the spec text
+this PR adds says the value is carried unchanged. Fix: a non-blank carried
+string is compared exactly, untrimmed. Baseline decided and stated in the
+code comment: the expected side is the CSV cell as `read_metadata_csv()`
+loads it — `normalize_cell()` strips every metadata cell on read, and
+`descriptor_field_from_column()` strips again — so the stripped cell is
+the only rendering of the CSV value the validator holds and is the right
+baseline. Blank/null handling kept exactly: a blank cell may be carried as
+`""` or `null`; whitespace-only is neither and is now rejected as a changed
+value. Tests (35 → 38): `test_descriptor_annotation_value_is_compared_untrimmed`
+(padded `unit_iri` on `NATURAL_SPAWNERS_TOTAL` rejected, message names the
+entry and key), `test_descriptor_annotation_exact_value_passes`, and
+`test_descriptor_blank_annotation_may_be_carried_empty_or_null` — the
+blank/null cases the first pass only exercised by hand (recorded above) are
+now committed. `CHANGELOG.md` unchanged: the existing bullet's "a carried
+value must equal the CSV cell" is now literally what the code does.
+
+    RED (tests written, comparison unfixed):
+      FAILED ...::test_descriptor_annotation_value_is_compared_untrimmed
+        Expected error containing "schema.fields entry NATURAL_SPAWNERS_TOTAL: unit_iri must equal the metadata/column_dictionary.csv value 'https://qudt.org/vocab/unit/INDIV'; found ' https://qudt.org/vocab/unit/INDIV '"; found []
+      FAILED ...::test_descriptor_blank_annotation_may_be_carried_empty_or_null
+        Expected error containing "statistical_modifier_iri must equal the metadata/column_dictionary.csv value ''; found ' '"; found []
+      2 failed, 36 passed
+    GREEN (comparison fixed):
+      python3 -m pytest tests -q                       → 38 passed
+      python3 -m unittest discover -s tests            → Ran 38 tests, OK
+      python3 scripts/validate_package.py examples/minimal-example      → passed
+      python3 scripts/validate_package.py examples/mixed-grain-example  → passed
+      python3 scripts/generate_artifacts.py --check    → in sync
+      git diff --check                                 → clean

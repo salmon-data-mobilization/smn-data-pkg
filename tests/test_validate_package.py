@@ -145,6 +145,54 @@ class StrictValidationTests(unittest.TestCase):
             "unit_iri must equal the metadata/column_dictionary.csv value"
         )
 
+    def test_descriptor_annotation_value_is_compared_untrimmed(self) -> None:
+        # B-90 review follow-up (P2): the spec says an annotation is carried
+        # with the dictionary value unchanged, but the comparison stripped
+        # the carried string first, so a padded IRI passed although it is
+        # not the CSV cell and not an absolute IRI. A non-blank carried
+        # value is compared exactly; the error names the entry and the key.
+        row = dictionary_row(self.package_path, "NATURAL_SPAWNERS_TOTAL")
+        padded = f" {row['unit_iri']} "
+        edit_descriptor_field(
+            self.package_path, "NATURAL_SPAWNERS_TOTAL", {"unit_iri": padded}
+        )
+
+        self.assertHasError(
+            "schema.fields entry NATURAL_SPAWNERS_TOTAL: unit_iri must equal the "
+            f"metadata/column_dictionary.csv value {row['unit_iri']!r}; found {padded!r}"
+        )
+
+    def test_descriptor_annotation_exact_value_passes(self) -> None:
+        # The control for the padded case: the same key carried exactly.
+        carried = carry_annotation_keys(
+            self.package_path, "NATURAL_SPAWNERS_TOTAL", ("unit_iri",)
+        )
+        self.assertEqual(["unit_iri"], list(carried))
+
+        self.assertEqual([], self.errors())
+
+    def test_descriptor_blank_annotation_may_be_carried_empty_or_null(self) -> None:
+        # A blank dictionary cell may be carried as "" or null (the spec's
+        # "carried blank"); whitespace-only is neither, it is a changed value.
+        row = dictionary_row(self.package_path, "NATURAL_SPAWNERS_TOTAL")
+        self.assertEqual("", row["statistical_modifier_iri"])
+
+        for blank in ("", None):
+            edit_descriptor_field(
+                self.package_path,
+                "NATURAL_SPAWNERS_TOTAL",
+                {"statistical_modifier_iri": blank},
+            )
+            self.assertEqual([], self.errors(), f"carried as {blank!r}")
+
+        edit_descriptor_field(
+            self.package_path, "NATURAL_SPAWNERS_TOTAL", {"statistical_modifier_iri": " "}
+        )
+        self.assertHasError(
+            "statistical_modifier_iri must equal the metadata/column_dictionary.csv "
+            "value ''; found ' '"
+        )
+
     def test_descriptor_core_keys_must_still_match(self) -> None:
         # The core projection keeps its exact comparison after the refactor.
         edit_descriptor_field(
