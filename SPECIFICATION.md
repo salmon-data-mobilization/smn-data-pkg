@@ -80,10 +80,38 @@ Minimum requirements:
 - Reference the canonical Frictionless Table Schema URL for each SDP metadata resource.
 - Include one data resource for each row in `metadata/tables.csv`.
 - Set each resource path to the matching `file_name` value from `metadata/tables.csv`.
-- Include a field entry for each matching row in `metadata/column_dictionary.csv`.
+- Include a field entry for each matching row in `metadata/column_dictionary.csv`, in dictionary row order, shaped as described under *Data resource field entries*.
 - Keep package title, description, license, resource paths, table labels, and field names consistent with the CSV metadata.
 
 If a CSV value and the generated `datapackage.json` disagree, the package is invalid and must be regenerated or corrected.
+
+### Data resource field entries
+
+Each data resource `schema.fields` entry is the projection of one
+`metadata/column_dictionary.csv` row. The core keys are always present and
+must agree with the row exactly:
+
+| Field key | Dictionary column |
+|---|---|
+| `name` | `column_name` |
+| `title` | `column_label` |
+| `description` | `column_description` |
+| `type` | `value_type` |
+| `constraints` | `{"required": true}` when `required` is `TRUE`; otherwise the key is absent |
+
+A field entry **may** additionally carry the row's semantic annotations — the
+term keys (`term_iri`, `term_type`) and the I-ADOPT keys (`unit_iri`,
+`property_iri`, `entity_iri`, `constraint_iri`, `statistical_modifier_iri`)
+— as keys named exactly as the dictionary column, with the dictionary value
+unchanged (a semicolon-separated `constraint_iri` stays one string). The rule
+behind that list is what governs: **every `column_dictionary.csv` column the
+core projection above does not already express is a permitted key**, read from
+`schema/frictionless/metadata/column_dictionary.schema.json`, so a column
+added to the dictionary schema is permitted without a change here, and the
+list in this paragraph is descriptive. Carrying these keys is optional; a
+blank dictionary cell is omitted or carried blank. A key that is not a
+dictionary column makes the package invalid, and so does a carried value that
+disagrees with the CSV cell.
 
 ## CSV format rules
 
@@ -260,7 +288,7 @@ version and citation beside `protocol_iri`.
 
 ## Versioning and extensions
 
-- Project-specific metadata extensions belong in sidecar files or non-SDP descriptor fields. Strict publication validation rejects extra columns in canonical SDP metadata CSVs.
+- Project-specific metadata extensions belong in sidecar files or non-SDP descriptor fields. Strict publication validation rejects extra columns in canonical SDP metadata CSVs, and rejects keys on data resource field entries that are not `column_dictionary.csv` columns.
 - Breaking changes to required columns or semantics should bump the major version.
 
 ## Non-normative guides

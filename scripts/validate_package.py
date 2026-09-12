@@ -53,6 +53,34 @@ IRI_FIELDS = {
     "observation_components": ("component_relation_iri",),
 }
 
+# The metadata/column_dictionary.csv columns the core Frictionless field
+# projection already expresses, mapped to the descriptor key each one becomes.
+# `dataset_id` and `table_id` are the data resource's identity rather than a
+# key of one field entry. Every OTHER column of column_dictionary.schema.json
+# is a permitted optional key of a descriptor field entry, carried under the
+# dictionary column's own name with the dictionary value unchanged.
+#
+# This is the projection contract, which the script has to own; it is not a
+# copy of the dictionary contract. The permitted extra keys are derived from
+# the schema at run time (`descriptor_annotation_keys()`), so a column added to
+# the dictionary — as statistical_modifier_iri was in sdp-0.3.0 — is permitted
+# without editing this script. Hub backlog #90, ruled 2026-08-24: both
+# metasalmon and metasalmonpy project the term and I-ADOPT columns into the
+# field entry, and the whole-entry `!=` this replaced rejected every annotated
+# package.
+DESCRIPTOR_PROJECTED_COLUMNS: dict[str, str | None] = {
+    "dataset_id": None,
+    "table_id": None,
+    "column_name": "name",
+    "column_label": "title",
+    "column_description": "description",
+    "value_type": "type",
+    "required": "constraints",
+}
+DESCRIPTOR_CORE_KEYS = tuple(
+    key for key in DESCRIPTOR_PROJECTED_COLUMNS.values() if key is not None
+)
+
 
 @dataclass
 class PackageData:
@@ -914,15 +942,27 @@ class Validator:
             if not isinstance(fields, list):
                 self.error(f"datapackage.json resource {path} schema.fields must be an array.")
                 continue
+            dictionary_schema = self.schemas["column_dictionary"]
             expected_fields = [
-                descriptor_field_from_column(column)
+                descriptor_field_from_column(column, dictionary_schema)
                 for column in columns_by_table[(table.get("dataset_id", ""), table.get("table_id", ""))]
             ]
-            if fields != expected_fields:
+            actual_names = [
+                field.get("name") if isinstance(field, dict) else None for field in fields
+            ]
+            if actual_names != [field["name"] for field in expected_fields]:
                 self.error(
                     f"datapackage.json resource {path} schema.fields must match "
                     "metadata/column_dictionary.csv-derived fields."
                 )
+                continue
+            annotation_keys = descriptor_annotation_keys(dictionary_schema)
+            for field, expected in zip(fields, expected_fields):
+                for issue in descriptor_field_issues(field, expected, annotation_keys):
+                    self.error(
+                        f"datapackage.json resource {path} schema.fields entry "
+                        f"{expected['name']}: {issue}."
+                    )
 
 
 def normalize_cell(value: object) -> str:
@@ -1046,7 +1086,28 @@ def descriptor_primary_key(primary_key: str) -> str | list[str] | None:
     return parts
 
 
-def descriptor_field_from_column(column: dict[str, str]) -> dict:
+def descriptor_annotation_keys(schema: dict) -> list[str]:
+    """Descriptor field keys permitted beyond the core projection.
+
+    Derived from column_dictionary.schema.json: every dictionary column the
+    core projection (`DESCRIPTOR_PROJECTED_COLUMNS`) does not already express,
+    in schema order. There is deliberately no hand-written list to keep in
+    step with the schema.
+    """
+    return [
+        field["name"]
+        for field in schema["fields"]
+        if field["name"] not in DESCRIPTOR_PROJECTED_COLUMNS
+    ]
+
+
+def descriptor_field_from_column(column: dict[str, str], schema: dict) -> dict:
+    """The descriptor field entry one column_dictionary.csv row projects to.
+
+    The core keys are always present. Each annotation key permitted by
+    `schema` is present when the dictionary cell is non-blank; a descriptor
+    may omit any of them (see `descriptor_field_issues()`).
+    """
     field = {
         "name": column.get("column_name", ""),
         "title": column.get("column_label", ""),
@@ -1055,7 +1116,61 @@ def descriptor_field_from_column(column: dict[str, str]) -> dict:
     }
     if parse_bool(column.get("required")) is True:
         field["constraints"] = {"required": True}
+    for key in descriptor_annotation_keys(schema):
+        value = normalize_cell(column.get(key))
+        if value != "":
+            field[key] = value
     return field
+
+
+def descriptor_field_issues(
+    field: object, expected: dict, annotation_keys: list[str]
+) -> list[str]:
+    """Why a descriptor field entry disagrees with its dictionary-derived form.
+
+    Core keys must match exactly, as before, presence included: a core key
+    the projection omits (`constraints` on a non-required column) must be
+    absent, not null, since `.get()` alone would read null as absent and
+    Table Schema requires a carried `constraints` to be an object. Any other
+    key must be a permitted annotation key (the descriptor MAY carry it) and,
+    when carried, must equal the dictionary value exactly, untrimmed; a
+    blank dictionary cell may be carried as an empty string or null. A key
+    with no dictionary column behind it is an error, which is what the exact
+    comparison this replaced was for.
+    """
+    if not isinstance(field, dict):
+        return ["must be an object"]
+    issues: list[str] = []
+    for key in DESCRIPTOR_CORE_KEYS:
+        if (key in field) != (key in expected) or field.get(key) != expected.get(key):
+            wanted = "absent" if key not in expected else repr(expected[key])
+            issues.append(f"{key} must be {wanted}; found {field.get(key)!r}")
+    for key, actual in field.items():
+        if key in DESCRIPTOR_CORE_KEYS:
+            continue
+        if key not in annotation_keys:
+            issues.append(
+                f"{key!r} is not a metadata/column_dictionary.csv column; "
+                f"a field entry may carry only {annotation_keys}"
+            )
+            continue
+        # The expected value is the CSV cell as read_metadata_csv() loaded it:
+        # normalize_cell() strips every metadata cell on read (and
+        # descriptor_field_from_column() strips it again), so the stripped
+        # cell is the only rendering of the CSV value this validator holds,
+        # and it is the baseline. The carried side is compared exactly,
+        # untrimmed: the spec says the value is carried unchanged, and
+        # stripping it here let " <iri> " pass although it is neither the
+        # cell nor an absolute IRI (B-90 review follow-up). A blank cell may
+        # be carried as "" or null, nothing else.
+        expected_value = expected.get(key, "")
+        carried = "" if actual is None else actual
+        if not isinstance(carried, str) or carried != expected_value:
+            issues.append(
+                f"{key} must equal the metadata/column_dictionary.csv value "
+                f"{expected_value!r}; found {actual!r}"
+            )
+    return issues
 
 
 def main(argv: Iterable[str] | None = None) -> int:
