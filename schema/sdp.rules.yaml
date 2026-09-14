@@ -49,17 +49,120 @@ rules:
     Every structure has at least one dimension, and repeated rows with the same
     dictionary-type-normalized dimension tuple have identical normalized measure and
     bound attribute values.
+# The two SOSA Procedure rules - methods_are_sosa_procedures here and
+# row_varying_procedures_use_codes below - state one reachability condition,
+# ruled by Brett on 2026-09-14. Both had previously said that a method IRI
+# "resolves to a shared vocabulary concept typed as a SOSA Procedure". That
+# phrase is gone for two reasons. It read as a per-IRI HTTP dereference, and
+# neither smn nor gcdfo is served for one. And it never said which of two
+# readings it meant - direct typing, or reachability through a concept
+# hierarchy - so the wording and the shipped modelling drifted apart with
+# nothing to catch it, because neither rule has ever been executed by any
+# implementation.
+#
+# Why the condition is reachability, and why the refused edge is named rather
+# than merely left unpermitted. Reachability subsumes direct typing, so the
+# zero-length case is a pass and the stricter reading is not overruled by the
+# looser one; it is also the shape smn's own ontology/shapes/method-shapes.ttl
+# already uses (sh:zeroOrMorePath skos:broader), so the spec and the shipped
+# shape now agree by construction instead of by coincidence. The asserted edge
+# to an OWL class is refused by name because it is the shape someone reaches
+# for on the way to satisfying this rule, and it looks like it would work.
+# Every sub-property of skos:semanticRelation carries rdfs:domain skos:Concept
+# and rdfs:range skos:Concept (SKOS S19-S22), and S41 makes skos:broadMatch a
+# sub-property of skos:broader, so asserting "<method> skos:broader
+# sosa:Procedure" entails "sosa:Procedure rdf:type skos:Concept" - it re-types
+# W3C's class as an individual - and entails nothing whatsoever about <method>,
+# or anything else, being a Procedure. Measured rather than argued: under OWL 2
+# RL closure the punned graph gives "sosa:Procedure rdf:type skos:Concept" true
+# and "<method> rdf:type sosa:Procedure" false. It costs a metamodelling
+# commitment and buys no entailment. A rule that only withheld permission would
+# leave a reader to infer the refusal from an absence, and an absence is not a
+# refusal.
+#
+# Why the condition is a check and not an entailment. sosa:usedProcedure
+# declares only schema:rangeIncludes sosa:Procedure - an annotation property
+# with informal semantics and no inferential force, per section 3 of the SSN
+# specification - so no reasoner infers that a bound term is a Procedure.
+# skos:broader carries no subclass entailment either, so nothing supplies the
+# reachability. Both halves have to be read from the vocabulary, which is why
+# this is written as a check.
+#
+# Why estimate-type and data-quality vocabularies are named. gcdfo's Hyatt
+# (1997) estimate types are ordinal quality ratings for escapement estimates,
+# and Brett ruled on 2026-08-17 that that scheme is specifically only for
+# escapement measurements and must not be the mapping target for general
+# data-quality codes. Such terms sit in the same tables and next to the same
+# method columns, so they are the ones most likely to be offered to these two
+# rules by mistake. Naming them costs two sentences; catching it per package in
+# review costs more.
+#
+# Retirement condition for the unresolved outcome, which is a skip and
+# therefore owes one. It exists only because a validator may hold no copy of
+# the vocabulary that declares a namespace. It becomes unnecessary once pinned
+# smn and gcdfo snapshots ship in metasalmon's inst/extdata and in the
+# metasalmonpy equivalent, because every namespace will then either resolve
+# against the pinned snapshot or be genuinely outside the spec's knowledge, and
+# the check can report absent or unreachable in every case. Until then a run
+# whose IRIs were all unresolved has checked nothing - which is why unresolved
+# is not an executing check for the rule id and escalates to an error under
+# require_iris = TRUE.
 - id: methods_are_sosa_procedures
   severity: error
-  description: A method describes how an observation was made, not what was observed,
-    and is recorded at the coarsest level where it is still true. Three placements,
-    in order of preference - tables.csv protocol_iri/protocol_citation (a protocol
-    names the per-measurement methods; in-package protocols cite the package
-    README.md section), tables.csv method_iri (one method, no protocol document),
-    or a data column bound with http://www.w3.org/ns/sosa/usedProcedure when the
-    method varies per row. Every method or protocol IRI resolves to a shared
-    vocabulary concept typed as a SOSA Procedure; there is no per-package method
-    registry, and column_dictionary carries no method field.
+  description: >-
+    A method describes how an observation was made, not what was observed, and
+    is recorded at the coarsest level where it is still true. Three placements,
+    in order of preference - tables.csv protocol_iri/protocol_citation (a
+    protocol names the per-measurement methods; in-package protocols cite the
+    package README.md section), tables.csv method_iri (one method, no protocol
+    document), or a data column bound with
+    http://www.w3.org/ns/sosa/usedProcedure when the method varies per row.
+    There is no per-package method registry, and column_dictionary carries no
+    method field.
+
+    Every method or protocol IRI is declared by a shared vocabulary and reaches
+    a resource carrying rdf:type http://www.w3.org/ns/sosa/Procedure by a
+    skos:broader path of zero or more steps. Zero or more is load-bearing: a
+    directly typed IRI passes as the zero-length case, with no ancestor
+    required and nothing further to check, and a path of one or more steps is
+    how a SKOS narrower concept qualifies on an ancestor's typing - which is
+    what a concept hierarchy asserts anyway. Reachability is a check, not an
+    entailment: no reasoner will tell you that a narrower concept is a
+    Procedure, and sosa:usedProcedure does not supply it either, because SOSA
+    declares only schema:rangeIncludes sosa:Procedure, an annotation property
+    with no inferential force.
+
+    An asserted skos:broader, skos:broadMatch, or any other sub-property of
+    skos:semanticRelation whose other side is an owl:Class is refused. It is
+    refused by name rather than merely unsupported, and pointing it the other
+    way does not help. Every sub-property of skos:semanticRelation has
+    rdfs:domain skos:Concept and rdfs:range skos:Concept (SKOS S19-S22, with
+    S41 making skos:broadMatch a sub-property of skos:broader), so such an edge
+    entails that the OWL class is a skos:Concept and entails nothing at all
+    about anything being a Procedure. It is OWL punning, it buys no entailment,
+    and it is not a way to satisfy this rule. Reach a typed resource; do not
+    assert an edge to a class.
+
+    Estimate-type and data-quality vocabularies are never method vocabularies.
+    A Hyatt (1997) estimate type (gcdfo:Type1 to gcdfo:Type6, under
+    gcdfo:EstimateType) classifies how good an abundance estimate is, and an
+    ordinal quality rating - the 1-5 scales behind fields such as
+    INFORMATION_QUALITY and INDEX_QUALITY, or a reliability flag - says how
+    much a datum can be relied on. Neither says how an observation was made, so
+    neither satisfies this rule at any path length, and a column carrying
+    either is an ordinary categorical attribute rather than one bound with
+    sosa:usedProcedure.
+
+    A check of this rule reports one of three outcomes for each IRI, each with
+    its own message, and never passes silently. Absent - the vocabulary
+    declaring the IRI's namespace was read and does not declare the IRI.
+    Unreachable - the IRI is declared, and no resource on any skos:broader path
+    from it carries rdf:type sosa:Procedure. Unresolved - the namespace could
+    not be resolved, so neither of the other two outcomes could be decided.
+    Unresolved is skipped and is not a pass: it leaves this rule unchecked for
+    that IRI, it does not count as an executing check for this rule id, and a
+    strict mode that requires IRIs (require_iris = TRUE) reports it as an error
+    instead of skipping it.
 - id: statistical_modifier_is_variable_identity
   severity: error
   description: column_dictionary.statistical_modifier_iri states what a reported
@@ -68,9 +171,30 @@ rules:
     different variables - and resolves to an I-ADOPT StatisticalModifier concept
     (recommended vocabulary smn:StatisticalModifierScheme). A method is never
     recorded here.
+# Same reachability condition, same refused edge and same three outcomes as
+# methods_are_sosa_procedures; the reasoning and the unresolved outcome's
+# retirement condition are in the comment above that rule.
 - id: row_varying_procedures_use_codes
   severity: error
-  description: A component bound with http://www.w3.org/ns/sosa/usedProcedure is a categorical
-    attribute. Every enumerated code, including currently unobserved allowed values,
-    has a codes.csv term_iri that resolves to a shared-vocabulary SOSA Procedure
-    concept.
+  description: >-
+    A component bound with http://www.w3.org/ns/sosa/usedProcedure is a
+    categorical attribute. Every enumerated code for that column, including
+    currently unobserved allowed values, has a codes.csv term_iri, and every one
+    of those term_iri values meets the condition
+    methods_are_sosa_procedures states for a method IRI: declared by a shared
+    vocabulary, and reaching a resource carrying rdf:type
+    http://www.w3.org/ns/sosa/Procedure by a skos:broader path of zero or more
+    steps, so a directly typed IRI passes as the zero-length case. The same edge
+    is refused here - an asserted skos:broader, skos:broadMatch or any other
+    sub-property of skos:semanticRelation whose other side is an owl:Class - and
+    a check reports the same three outcomes for each term_iri, absent,
+    unreachable and unresolved, each with its own message, with unresolved
+    skipped rather than passed.
+
+    The exclusion bites hardest here, because codes.csv term_iri is where a
+    classification is most easily mistaken for a method. An estimate-type or
+    data-quality code - a Hyatt (1997) estimate type, an ordinal information- or
+    index-quality rating, a reliability flag - says how good a value is, not how
+    it was produced. A column of those is a categorical attribute that is not
+    bound with sosa:usedProcedure, so its term_iri values are outside this
+    rule's scope rather than terms that fail it.

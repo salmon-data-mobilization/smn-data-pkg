@@ -8,6 +8,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- `methods_are_sosa_procedures` and `row_varying_procedures_use_codes` in
+  `schema/sdp.rules.yaml` now state the **reachability** reading (hub backlog
+  #106, ruled by Brett 2026-09-14). A method or protocol IRI, and every
+  `codes.csv` `term_iri` on a component bound with `sosa:usedProcedure`, is
+  **declared by a shared vocabulary** and **reaches a resource carrying
+  `rdf:type sosa:Procedure` by a `skos:broader` path of zero or more steps** —
+  so a directly typed IRI passes as the zero-length case, and a SKOS narrower
+  concept qualifies on an ancestor's typing. This is the shape smn's own
+  `ontology/shapes/method-shapes.ttl` already uses (`sh:zeroOrMorePath
+  skos:broader`) and the shape gcdfo's method concepts already have, so the
+  spec and the shipped modelling now agree by construction rather than by
+  coincidence. Three further changes come with it. **The phrase "resolves to"
+  is dropped**, because it read as a per-IRI HTTP dereference and neither
+  vocabulary is served for one. **An asserted `skos:broader`, `skos:broadMatch`
+  or any other sub-property of `skos:semanticRelation` whose other side is an
+  `owl:Class` is refused by name** — SKOS S19–S22 give every such property
+  `rdfs:domain`/`rdfs:range` `skos:Concept`, so the edge entails that the OWL
+  class is a `skos:Concept` and entails nothing about anything being a
+  Procedure; it is OWL punning and it is not a way to satisfy the rule.
+  **Estimate-type and data-quality vocabularies are named as never being method
+  vocabularies** — a Hyatt (1997) estimate type (`gcdfo:Type1`–`gcdfo:Type6`)
+  or an ordinal information-/index-quality or reliability rating says how good
+  a value is, not how it was produced, so such a column is an ordinary
+  categorical attribute and is not bound with `sosa:usedProcedure`. Both rules
+  now specify the three outcomes a check reports — **absent**, **unreachable**,
+  **unresolved** — each with its own message, with **unresolved skipped rather
+  than passed**: it is not an executing check for the rule id and it escalates
+  to an error under `require_iris = TRUE`. The adjacent comment carries the
+  SKOS/OWL reasoning and the unresolved outcome's retirement condition (pinned
+  `smn` and `gcdfo` snapshots in the implementations' bundled data). No rule
+  `id` changed, and nothing executes either rule yet — that is hub backlog #48,
+  which builds its dispatch on this text.
 - Descriptor `schema.fields` entries may carry the column dictionary's
   semantic annotation keys — `unit_iri`, `term_iri`, `term_type`,
   `property_iri`, `entity_iri`, `constraint_iri`,

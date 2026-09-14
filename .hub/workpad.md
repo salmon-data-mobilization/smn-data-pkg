@@ -1,276 +1,233 @@
-# Workpad: B-90
+# Workpad: B-106
+
+*(This file is per-branch. It carried B-90's report on `main`, which is
+preserved in git history at `9541217`; this branch replaces it rather than
+appending, so the pull request diff is this item's report and nothing else.)*
 
 ## Queue item
 
-**B-90** — Permit the I-ADOPT descriptor keys in smn-data-pkg's publication
-validator. Repo `smn-data-pkg`, severity P2, legacy `#90`. Evidence:
-metasalmon `knowledge/backlog.md`, entry `#90`, including the 2026-08-24
-ruling (Brett, hub Q3: permit the keys, derive the allowlist from
-`column_dictionary.schema.json`) and the 2026-08-21/2026-08-24 "identical
-keys" corrections. Retires when an SDP with a fully annotated measurement
-column passes `scripts/validate_package.py`, `SPECIFICATION.md` says
-descriptor `schema.fields` entries may carry the I-ADOPT keys, and
-`descriptor_field_from_column()` derives the allowlist from the schema.
+**B-106** — Reword the two `sdp.rules.yaml` SOSA Procedure rules to the ruled
+reachability reading. Repo `smn-data-pkg`, kind `defect`, severity P4, legacy
+`#106`, venue `claude-science`. Evidence: metasalmon `knowledge/backlog.md`
+entry `#106`, and the ruling it rests on, **Q47** in metasalmon
+`knowledge/questions.md` (ANSWERED 2026-09-14, Brett).
+
+Despite the P4 this is on the critical path: **B-48** (the last P1 — three
+error-severity rules loaded and never executed) builds its dispatch on the text
+produced here, so the wording is the specification for code somebody else
+writes.
+
+`retires_when` (abridged): both rules carry the ruled reading — declared by a
+shared vocabulary, reaching `rdf:type sosa:Procedure` by a zero-or-more-step
+`skos:broader` path, a directly typed IRI passing as the zero-length case; the
+asserted `skos:semanticRelation` sub-property edge to an `owl:Class` refused by
+name with the SKOS S19–S22 reason; estimate-type and data-quality vocabularies
+named as never method vocabularies; "resolves to" dropped — the three validator
+outcomes expressible with the unresolved one a skip and not a pass; and
+metasalmon's vendored copy re-vendored in the same change.
 
 ## What changed and where
 
-- `scripts/validate_package.py`
-  - New `DESCRIPTOR_PROJECTED_COLUMNS`: the dictionary columns the core
-    projection consumes (`dataset_id`/`table_id` as resource identity;
-    `column_name→name`, `column_label→title`, `column_description→description`,
-    `value_type→type`, `required→constraints`). This is the projection
-    contract the script must own, not a copy of the dictionary contract.
-  - New `descriptor_annotation_keys(schema)`: the permitted extra keys,
-    derived at run time as every field of `column_dictionary.schema.json`
-    not in the projected set. No hand-written list. Today that yields
-    `column_role, unit_label, unit_iri, term_iri, term_type, property_iri,
-    entity_iri, constraint_iri, statistical_modifier_iri`, which covers the
-    seven keys both mirrors emit (metasalmon `.ms_descriptor_field_keys()`,
-    `R/metadata-write.R:43-53`) plus `column_role` and `unit_label`. I did
-    not carve those two out: any rule excluding them while keeping
-    `term_type` (not an `_iri`) would be a second hand-written list, which
-    is the thing the ruling said not to build. If Brett wants the allowlist
-    narrower, the cut is one entry in `DESCRIPTOR_PROJECTED_COLUMNS`-style
-    exclusion and a spec sentence; flagged in the PR.
-  - `descriptor_field_from_column(column, schema)` now takes the schema and
-    adds each permitted annotation key whose dictionary cell is non-blank.
-  - New `descriptor_field_issues(field, expected, annotation_keys)`
-    replaces the whole-list `!=`: core keys must match exactly (as before);
-    an extra key must be a permitted annotation key (the descriptor MAY carry
-    it) and, when carried, must equal the dictionary cell (blank cell may be
-    carried as `""` or `null`); a key with no dictionary column behind it is
-    an error. Field order and count are still checked first, with the
-    original "schema.fields must match metadata/column_dictionary.csv-derived
-    fields" message; per-entry errors now name the entry and the key.
-- `SPECIFICATION.md`: new subsection "Data resource field entries" under
-  the `datapackage.json` guidance stating the core projection table, that a
-  field entry **may** carry the term and I-ADOPT keys, that the governing
-  rule is "every dictionary column the core projection does not express, read
-  from the schema", that a blank cell is omitted or carried blank, and that an
-  unknown key or a disagreeing value is invalid. The "Versioning and
-  extensions" bullet now also says unknown field-entry keys are rejected.
-- `CHANGELOG.md`: `[Unreleased]` → `### Changed` entry in the existing style.
-- `tests/test_validate_package.py`: ten new tests (23 → 33).
-  - `StrictValidationTests` (minimal example): fully annotated measurement
-    column with all seven keys passes; unknown key rejected; carried value
-    that disagrees with the CSV rejected; core key drift still rejected;
-    field order drift still rejected.
-  - `ObservationStructureValidationTests` (mixed-grain example): both
-    measurement columns carry their semicolon-separated `constraint_iri`
-    unchanged and pass.
-  - New `DescriptorAllowlistTests`: allowlist equals schema fields minus the
-    projected set and covers the mirrors' seven keys; a column added to a
-    (copied) schema is permitted without a script change; the projected
-    columns all exist in the schema; the expected entry carries only
-    non-blank annotations.
-  - Helpers `data_resource`, `dictionary_row`, `set_dictionary_cells`,
-    `edit_descriptor_field`, `carry_annotation_keys`.
+### `schema/sdp.rules.yaml` — the two rules, and nothing else
 
-**IRIs used in fixtures, and where they come from.** Every IRI the tests
-carry is copied from the row it annotates in the shipped examples
-(`examples/minimal-example/metadata/column_dictionary.csv` row
-`NATURAL_SPAWNERS_TOTAL`; `examples/mixed-grain-example` rows
-`total_spawners` and `recruits`). The one exception is
-`statistical_modifier_iri`: no shipped example carries one, so the
-"fully annotated" test sets a **placeholder** in the namespace the minimal
-example already uses for its own placeholders
-(`https://w3id.org/example/salmon#TotalStatisticalModifierPlaceholder`).
-It exists only inside the test, is not written to any example or template,
-and is not an ontology term choice. The "disagreeing value" test uses the
-same row's `term_iri` as the wrong `unit_iri` rather than inventing one.
-No ontology term IRI was chosen, changed, or removed by this change.
+Both descriptions moved from a plain multi-line scalar to a `>-` folded block
+scalar. That is deliberate and not cosmetic: a plain YAML scalar cannot contain
+`": "`, and the other twelve rules avoid colons by using dashes throughout. The
+new text needs colons to read as a specification (`Zero or more is
+load-bearing: …`), so the two rules that carry it use block scalars. Paragraph
+breaks survive folding as single newlines; verified by parsing.
 
-metasalmon's copy of the schema
-(`inst/extdata/schema/frictionless/metadata/column_dictionary.schema.json`)
-was diffed against `schema/frictionless/metadata/column_dictionary.schema.json`
-and is byte-identical; nothing to report there.
+**No rule `id`, `severity`, `version` or `profile` changed.** All 14 ids are
+byte-identical to `main`, because B-48's test keys on rule ids.
 
-## Commands run and results
+- **`methods_are_sosa_procedures`** — five paragraphs.
+  1. Unchanged in substance: what a method is, the three placements in order of
+     preference, no per-package method registry, no dictionary `method_iri`.
+     (The last two clauses moved from the end of the rule to the end of this
+     paragraph, where the placements they qualify are.)
+  2. The reachability condition. *Declared by* a shared vocabulary (not
+     "resolves to"), *reaches* a resource carrying
+     `rdf:type http://www.w3.org/ns/sosa/Procedure` by a `skos:broader` path of
+     **zero or more steps**, with the zero-length case stated as a pass in the
+     rule text rather than left to be derived. Says it is a check and not an
+     entailment, and why: `sosa:usedProcedure` declares only
+     `schema:rangeIncludes sosa:Procedure`, an annotation property with no
+     inferential force.
+  3. The refused edge, **by name**: an asserted `skos:broader`,
+     `skos:broadMatch`, or any other sub-property of `skos:semanticRelation`
+     whose other side is an `owl:Class`. With the S19–S22 reason in the rule
+     text, and "pointing it the other way does not help".
+  4. The exclusion, with the vocabularies **named**: a Hyatt (1997) estimate
+     type (`gcdfo:Type1`–`gcdfo:Type6`, under `gcdfo:EstimateType`); an ordinal
+     quality rating, the 1–5 scales behind `INFORMATION_QUALITY` and
+     `INDEX_QUALITY`, or a reliability flag. "Neither satisfies this rule at any
+     path length" — that phrase closes the loophole that an estimate type might
+     qualify via some ancestor.
+  5. The three outcomes — **absent**, **unreachable**, **unresolved** — each
+     with its own message, never passing silently, and the skip stated as a skip
+     in three separate ways so a validator author cannot read it as a pass: it
+     leaves the rule unchecked for that IRI, it does not count as an executing
+     check for the rule id, and `require_iris = TRUE` reports it as an error.
 
-All inside the worktree, Python 3.11.15, jsonschema 4.26.0, pytest 9.1.1.
+- **`row_varying_procedures_use_codes`** — two paragraphs. Carries the same
+  condition, the same refused edge and the same three outcomes named
+  individually, so a validator dispatching on this rule id alone has enough to
+  write the check, while pointing at `methods_are_sosa_procedures` for the full
+  statement rather than keeping a second full copy that can drift. The second
+  paragraph states the exclusion again because `codes.csv` `term_iri` is where it
+  actually bites — and states the consequence precisely: such a `term_iri` is
+  **outside this rule's scope**, not a term that fails it.
 
-Baseline on `origin/main` (47f0e81) before any edit:
+- **An adjacent comment block** above `methods_are_sosa_procedures` (with a
+  three-line pointer above `row_varying_procedures_use_codes`) carries what is
+  reasoning rather than rule: why "resolves to" went, why reachability subsumes
+  direct typing, the OWL-punning measurement, why the condition is a check, why
+  the two vocabularies are named, and the unresolved outcome's retirement
+  condition. The file is input-only to `scripts/generate_artifacts.py` (it reads
+  `version` and `profile`; it never writes the file), so comments are durable —
+  checked before relying on it.
 
-    python3 -m pytest tests -q                       → 23 passed
-    python3 scripts/validate_package.py examples/minimal-example      → passed
-    python3 scripts/validate_package.py examples/mixed-grain-example  → passed
-    python3 scripts/generate_artifacts.py --check    → in sync
+### `CHANGELOG.md`
 
-**Failing before** (tests written, validator untouched):
+One entry under `## [Unreleased]` → `### Changed`, stating the new reading, all
+four clauses of the ruling, the three outcomes, that no rule id changed, and
+that nothing executes either rule yet (#48).
 
-    python3 -m pytest tests -q
-        from validate_package import (  # noqa: E402
-    E   ImportError: cannot import name 'DESCRIPTOR_PROJECTED_COLUMNS' from 'validate_package' (/home/user/hub-worktrees/salmon-data-mobilization-smn-data-pkg-B-90/scripts/validate_package.py)
-    =========================== short test summary info ============================
-    ERROR tests/test_validate_package.py
-    !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
-    1 error in 0.27s
+## Commands run, and results
 
-The import error is the new API not existing yet; the behavioural
-reproduction is the minimal example copied to a scratch directory, its
-`NATURAL_SPAWNERS_TOTAL` dictionary row given the placeholder
-`statistical_modifier_iri`, and the matching descriptor field given all
-seven keys with the dictionary values, then the **unmodified** validator:
+Everything `docs/entrypoints.md` and `.github/workflows/ci.yml` name, plus both
+example packages. Run in the worktree, after the edit:
 
-    python3 scripts/validate_package.py <scratch>/b90-annotated-pkg
-    Strict SDP validation failed for /tmp/claude-0/-home-user-metasalmon/c65e9c22-7ec7-5a53-8177-deda0f189418/scratchpad/b90-annotated-pkg:
-    - datapackage.json resource data/nuseds-fraser-coho-sample.csv schema.fields must match metadata/column_dictionary.csv-derived fields.
-    exit 1
+```
+python3 -m pytest tests/ -q                    -> 38 passed in 0.55s (exit 0)
+python3 -m unittest discover -s tests          -> Ran 38 tests ... OK
+python3 scripts/generate_artifacts.py --check  -> Generated artifacts are in sync. (exit 0)
+python3 scripts/validate_package.py examples/minimal-example
+                                               -> Strict SDP validation passed (exit 0)
+python3 scripts/validate_package.py examples/mixed-grain-example
+                                               -> Strict SDP validation passed (exit 0)
+git diff --check                               -> clean
+```
 
-That is the error the backlog entry reproduced end to end on 2026-08-21.
+Parse check on the edited file — the one thing the suite does not do, because
+nothing in this repo loads the rules in a test:
 
-**Passing after** (validator, spec, changelog changed):
+```
+python3 -c "import yaml; d=yaml.safe_load(open('schema/sdp.rules.yaml')); ..."
+  -> version sdp-0.3.0, profile unchanged, 14 rules,
+     ids identical to main, the two descriptions 3266 and 1346 chars
+```
 
-    python3 -m pytest tests -q                       → 33 passed
-    python3 -m unittest discover -s tests            → Ran 33 tests, OK
-    python3 scripts/validate_package.py <scratch>/b90-annotated-pkg
-    Strict SDP validation passed: /tmp/claude-0/-home-user-metasalmon/c65e9c22-7ec7-5a53-8177-deda0f189418/scratchpad/b90-annotated-pkg
-    exit 0
-    python3 scripts/validate_package.py examples/minimal-example      → passed
-    python3 scripts/validate_package.py examples/mixed-grain-example  → passed
-    python3 scripts/generate_artifacts.py --check    → in sync
-    git diff --check                                 → clean
+### Failing-before / passing-after
 
-CI (`.github/workflows/ci.yml`) runs exactly `python -m pytest tests/` and
-`python scripts/generate_artifacts.py --check`; both were run here. The
-`.pre-commit-config.yaml` hook is the same artifact check.
+**There is no red-to-green to show, and that is the finding rather than a gap in
+the evidence.** This item is a defect in *text*, and the reason the text drifted
+is that **nothing executes either rule** — `methods_are_sosa_procedures` and
+`row_varying_procedures_use_codes` are two of the three rules in #48, loaded and
+never run. Measured on `main` before the edit: neither rule id appears anywhere
+in this repository outside `schema/sdp.rules.yaml`, and the whole suite is green
+with the old wording. So the before-and-after that exists is:
 
-Edge cases exercised directly against `descriptor_field_issues()` (not
-committed as tests, recorded here): a blank dictionary cell carried as
-`null` or `""` → no issue; `constraint_iri` carried as a JSON list → value
-mismatch (the spec says the string stays one string); a spurious
-`constraints: {required: false}` → core mismatch, as before; a non-object
-entry → "must be an object"; an unknown key → named, with the permitted list.
+- **Before:** all six commands green on `main` with both rules reading "resolves
+  to a shared vocabulary concept typed as a SOSA Procedure" — a literal reading
+  under which every gcdfo method target this ecosystem emits is non-conformant.
+  Green proves only that nothing checks it.
+- **After:** all six commands green with the ruled wording. Same proof, same
+  limit.
+
+The first genuine red-to-green for this text belongs to **B-48**, which is gated
+behind **B-148** precisely so that wiring the check up does not turn the bundled
+NuSEDS example red on day one.
 
 ## What I did not do, and why
 
-- Did not add the annotation keys to the shipped examples' `datapackage.json`
-  or to the template. The keys are "may", the examples are valid without
-  them, and the item's retirement condition is satisfied by the validator,
-  the spec, and a test fixture. Changing example descriptors is a visible
-  artifact change worth its own review (see candidates).
-- Did not narrow the allowlist to exactly the seven mirror keys (see above).
-- Did not touch `docs/i-adopt-integration-guide.md` or `docs/field-reference.md`
-  (generated; unchanged because the schema is unchanged).
-- Did not change the schema file. A schema-side marker (e.g. an `sdp:`
-  annotation naming descriptor keys) would have been another way to derive
-  the list, but it would change a file metasalmon vendors byte-identically
-  and would need a re-vendor there.
-- Did not edit anything in metasalmon, metasalmonpy, or `queue/`.
+- **Did not touch `SPECIFICATION.md`.** It restates the old wording nearly
+  verbatim in two places and now contradicts the rules file. That is a real
+  defect and it is **out of this item's scope** — see the candidate new item
+  below. `retires_when` names the rules file and the vendored copy and stops
+  there, and HUB.md forbids widening a claimed item.
+- **Did not touch `docs/field-reference.md`,
+  `docs/i-adopt-integration-guide.md`, `templates/.../README.md`,
+  `template-source/.../README.md`, or
+  `examples/mixed-grain-example/README.md`**, all of which carry the same
+  phrasing. Same reason; two of them are generated, so editing them also moves a
+  generated artifact.
+- **Did not touch `docs/adr/0001-...md`.** An ADR is a dated record of a
+  decision and is not corrected in place.
+- **Did not implement any check.** That is B-48.
+- **Did not change a rule id, severity, `version` or `profile`.**
 
-## Belongs to another item, or a candidate new item
+## Belongs to another item
 
-- **Candidate (smn-data-pkg):** neither shipped example carries a
-  `statistical_modifier_iri`, so no example demonstrates the fifth I-ADOPT
-  component or a descriptor carrying the annotation keys. Adding one means
-  choosing a real `smn:StatisticalModifierScheme` concept for
-  `NATURAL_SPAWNERS_TOTAL` or `total_spawners`, which is a term selection
-  needing appraisal rather than a by-product of this change.
-- **Candidate (smn-data-pkg, question for Brett):** whether `column_role`
-  and `unit_label` should be permitted descriptor keys. Under the
-  schema-derived rule they are; the mirrors do not emit them; nothing is
-  harmed either way.
-- **metasalmon / metasalmonpy:** no port is owed. Neither vendors
-  `validate_package.py`; metasalmon's schema copy is identical. The backlog
-  `#90` entry's second retirement clause (metasalmonpy's seventh key matching
-  R's) was already recorded closed on 2026-08-24. The queue item's state
-  change and the backlog entry's retirement note are the hub's to make, not
-  this branch's.
+- **B-48** (P1, `claimable: false`) — three error-severity rules loaded and
+  never executed. Both rules reworded here are two of the three. Its dispatch
+  reads the text landed here; its own gate is B-148.
+- **B-148** — gcdfo's estimate branch terminates in an untyped
+  `gcdfo:EstimateMethod`, so 22 of metasalmon's 45 non-missing `gcdfo:` method
+  targets reach no typed ancestor and fail under *either* reading. Not affected
+  by this wording; it is why B-48 must not unblock into a failing check.
+- **B-76** — which method-modelling style is canonical, and whether gcdfo is
+  recorded as the deliberate NuSEDS method source. Q47 deliberately left this
+  half open.
+- **B-147** — smn's `alignment-main.ttl` already asserts the shape this rule now
+  refuses, in 17 rows, two of them `skos:broadMatch` and one of them on
+  `sosa:Procedure` itself. This item makes the spec refuse it; fixing smn is
+  B-147, in a repository agents may not push to.
 
-## Retirement conditions of anything added that silences or routes around a signal
+### Candidate new item (no id yet)
 
-- `PLACEHOLDER_STATISTICAL_MODIFIER_IRI` (test fixture): retires when a
-  shipped example carries a real statistical-modifier concept and the test
-  copies it from the example row like every other IRI it uses.
-- `MIRROR_ANNOTATION_KEYS` (test pin of the seven keys the mirrors emit):
-  retires when the mirrors' projections are themselves derived from the
-  schema and a cross-repo check replaces the pin; until then it is the
-  evidence that the derived allowlist covers what the writers actually emit.
-- Blank cell carried as `null`/`""` accepted as agreeing with the CSV: a
-  rule, not a guard, but stated so it can be tightened. Retires (tightens to
-  "omit") if the spec later says blank keys must be omitted, or if a writer
-  is found emitting blanks in some other shape that this leniency hides.
-- The original "schema.fields must match ...-derived fields" message is kept
-  for order/count mismatch so existing readers of the validator output (the
-  backlog entry quotes it) still find it. Retires when nothing cites it.
+**`SPECIFICATION.md` and four other documents restate the two rules' old
+wording, and now contradict `schema/sdp.rules.yaml`.** Evidence, measured on
+this branch:
 
-## Follow-up: review finding (P3), `"constraints": null` read as absent
+| File | Line(s) | Text |
+|---|---|---|
+| `SPECIFICATION.md` | 236–240 | "Every method or protocol IRI resolves to a shared vocabulary concept typed as a `sosa:Procedure`" |
+| `SPECIFICATION.md` | 262–265 | "has a `codes.csv` `term_iri` resolving to a shared-vocabulary `sosa:Procedure` concept" |
+| `docs/field-reference.md` | 64 | generated from `column_dictionary.schema.json`; "SOSA Procedure IRI" |
+| `templates/salmon-data-package-template/README.md` | 15–17 | generated from `template-source/` |
+| `template-source/salmon-data-package-template/README.md` | 15–17 | source of the above |
+| `examples/mixed-grain-example/README.md` | 15–16 | "its code IRIs resolve directly to shared-vocabulary `sosa:Procedure` concepts" |
 
-**Finding** (independent review of PR #7, reproduced here). `descriptor_field_issues()`
-compared each core key with `field.get(key) != expected.get(key)`, so an
-entry carrying `"constraints": null` for a **non-required** column compared
-equal to an expected entry with no `constraints` key. The whole-entry `!=`
-it replaced rejected that entry, the spec table this PR adds says "otherwise
-the key is absent", and Table Schema requires `constraints` to be an object
-— so the branch enforced less than the spec it introduced, and a
-Frictionless-invalid entry passed strict publication validation.
+`SPECIFICATION.md` line 10 makes `schema/sdp.rules.yaml` the home for exactly
+these rules, so the five documents are the copies and they are the ones that are
+wrong — the queue README's own rule, pointed at prose instead of a card. Worth
+its own item because rewording normative spec prose is a second semantic choice
+needing its own review, two of the six files are generated, and none of it is in
+this item's `retires_when`. Suggested severity P3: nothing errors, but a reader
+of `SPECIFICATION.md` is now told the literal reading the ruling rejected.
 
-Reproduction: minimal example copied to scratch, `"constraints": null` set
-on the `POPULATION` entry (`required = FALSE`).
+## Guards, suppressions, skips and workarounds added — and what retires them
 
-    origin/main (47f0e81) validator:
-      - datapackage.json resource data/nuseds-fraser-coho-sample.csv schema.fields must match metadata/column_dictionary.csv-derived fields.   exit 1
-    branch before the fix:
-      Strict SDP validation passed: .../constraints-null-pkg                exit 0
+One skip was added, **to the specification** rather than to code: the
+**unresolved** outcome, where a check cannot resolve the namespace declaring an
+IRI and therefore cannot decide between *absent* and *unreachable*.
 
-**Fix.** `descriptor_field_issues()` compares presence as well as value for
-each core key — `(key in field) != (key in expected) or field.get(key) !=
-expected.get(key)` — and reuses the existing "must be absent; found ..."
-message; the docstring says why. The annotation-key branch (a blank cell
-carried as `""` or `null`) is untouched and keeps its retirement note above.
-`SPECIFICATION.md` is unchanged: it already states the rule the fix now
-enforces. `CHANGELOG.md`: one sentence added to the existing `[Unreleased]`
-bullet.
+- **What it routes around:** a validator may hold no copy of the vocabulary that
+  declares a namespace, and neither `smn` nor `gcdfo` is served for per-IRI
+  dereference — the same fact that removed the phrase "resolves to".
+- **Why it is not a pass, stated three ways in the rule text** so a validator
+  author cannot read it as one: it leaves the rule unchecked for that IRI; it
+  does not count as an executing check for the rule id (so it does not satisfy
+  B-48's test that every rule id has an executing check); and a strict mode that
+  requires IRIs (`require_iris = TRUE`) reports it as an error.
+- ***Retires when:*** pinned `smn` and `gcdfo` snapshots ship in metasalmon's
+  `inst/extdata` and in the metasalmonpy equivalent, so every namespace either
+  resolves against the pinned snapshot or is genuinely outside the spec's
+  knowledge, and the check can report *absent* or *unreachable* in every case.
+  Stated in the comment block above `methods_are_sosa_procedures` as well as
+  here, because the file is where a validator author will read it.
 
-**Tests** (`tests/test_validate_package.py`, 33 → 35, plus a `descriptor_field()`
-reader helper): `test_descriptor_constraints_null_is_not_absent` (null on
-`POPULATION` is rejected with a message naming the entry and the key) and
-`test_descriptor_required_column_still_carries_constraints` (`POP_ID` is
-required, its entry carries `{"required": true}`, the package passes).
+## Paired change in another repository
 
-    RED (tests written, validator unfixed):
-      FAILED tests/test_validate_package.py::StrictValidationTests::test_descriptor_constraints_null_is_not_absent
-      AssertionError: Expected error containing 'schema.fields entry POPULATION: constraints must be absent; found None'; found []
-      1 failed, 34 passed
-    GREEN (validator fixed):
-      python3 -m pytest tests -q                       → 35 passed
-      reproduction package:
-      - datapackage.json resource data/nuseds-fraser-coho-sample.csv schema.fields entry POPULATION: constraints must be absent; found None.   exit 1
-      python3 scripts/validate_package.py examples/minimal-example      → passed
-      python3 scripts/validate_package.py examples/mixed-grain-example  → passed
-      python3 scripts/generate_artifacts.py --check    → in sync
-      git diff --check                                 → clean
+metasalmon's vendored copy at `inst/extdata/schema/sdp.rules.yaml` was
+**byte-identical to this repo's file on `main`** (md5 `3c702a37...` across the
+upstream file, metasalmon's copy and the primary checkout), so there is **no
+drift** and the re-vendor is a plain copy. No vendoring script exists in either
+repo; metasalmon's `knowledge/orientation.md` (lines 130–131) says to keep the
+copies in step by "re-vendoring from upstream, not by hand-editing either side",
+which is what was done — the file was copied, not retyped.
 
-**Second finding (Codex, P2), carried annotation values compared after
-trimming.** `descriptor_field_issues()` compared `normalize_cell(carried)`
-to the CSV value, so `" https://qudt.org/vocab/unit/INDIV "` passed although
-it differs from the cell and is not an absolute IRI, while the spec text
-this PR adds says the value is carried unchanged. Fix: a non-blank carried
-string is compared exactly, untrimmed. Baseline decided and stated in the
-code comment: the expected side is the CSV cell as `read_metadata_csv()`
-loads it — `normalize_cell()` strips every metadata cell on read, and
-`descriptor_field_from_column()` strips again — so the stripped cell is
-the only rendering of the CSV value the validator holds and is the right
-baseline. Blank/null handling kept exactly: a blank cell may be carried as
-`""` or `null`; whitespace-only is neither and is now rejected as a changed
-value. Tests (35 → 38): `test_descriptor_annotation_value_is_compared_untrimmed`
-(padded `unit_iri` on `NATURAL_SPAWNERS_TOTAL` rejected, message names the
-entry and key), `test_descriptor_annotation_exact_value_passes`, and
-`test_descriptor_blank_annotation_may_be_carried_empty_or_null` — the
-blank/null cases the first pass only exercised by hand (recorded above) are
-now committed. `CHANGELOG.md` unchanged: the existing bullet's "a carried
-value must equal the CSV cell" is now literally what the code does.
-
-    RED (tests written, comparison unfixed):
-      FAILED ...::test_descriptor_annotation_value_is_compared_untrimmed
-        Expected error containing "schema.fields entry NATURAL_SPAWNERS_TOTAL: unit_iri must equal the metadata/column_dictionary.csv value 'https://qudt.org/vocab/unit/INDIV'; found ' https://qudt.org/vocab/unit/INDIV '"; found []
-      FAILED ...::test_descriptor_blank_annotation_may_be_carried_empty_or_null
-        Expected error containing "statistical_modifier_iri must equal the metadata/column_dictionary.csv value ''; found ' '"; found []
-      2 failed, 36 passed
-    GREEN (comparison fixed):
-      python3 -m pytest tests -q                       → 38 passed
-      python3 -m unittest discover -s tests            → Ran 38 tests, OK
-      python3 scripts/validate_package.py examples/minimal-example      → passed
-      python3 scripts/validate_package.py examples/mixed-grain-example  → passed
-      python3 scripts/generate_artifacts.py --check    → in sync
-      git diff --check                                 → clean
+It is a different repository, so it cannot be in this commit. It lands as a
+**second branch and second draft pull request in metasalmon**, off current
+`main`, which must not merge before this one.
