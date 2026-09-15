@@ -44,9 +44,9 @@ vocabularies:
   concept individuals, so the OWL restriction can only target the generic
   `sosa:Procedure` class and the specific constraint moved to SHACL.
 
-So the direct-typing reading makes every method target this ecosystem emits
-non-conformant, while the reachability reading is the shape both vocabularies
-already have.
+So the direct-typing reading makes every **gcdfo** method target non-conformant —
+smn's six directly typed concepts would still pass — while the reachability
+reading is the shape both vocabularies already have.
 
 **And "resolves to" read as a per-IRI HTTP dereference.** Neither smn nor gcdfo
 is served for one, so the phrase described an operation no validator can
@@ -153,8 +153,14 @@ it as an error instead of skipping it.
 
 ## Consequences
 
-- Every method target the ecosystem currently emits is conformant under the
-  ruled reading, where most were non-conformant under direct typing.
+- The gcdfo survey-method targets that direct typing would have rejected are
+  conformant under the ruled reading. **This does not make every emitted target
+  conformant**, and the difference is not covered by this decision: gcdfo's
+  *estimate* branch terminates in an untyped `gcdfo:EstimateMethod`, so targets
+  under it reach no typed ancestor and fail under **either** reading. That is a
+  gap in the vocabulary rather than in the wording, and it is why hub backlog
+  #48 is gated — wiring the check up without fixing it would turn a bundled
+  example red on day one.
 - **The qualifying path can cross a vocabulary boundary, and in practice it
   always does.** Every gcdfo survey-method concept qualifies through
   `smn:EnumerationMethod`, an smn term. A check therefore cannot decide either

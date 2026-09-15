@@ -391,3 +391,19 @@ B-48 keys on moved. The rules file is still pure ASCII.
   register permits, so it is flagged rather than fixed.
 - **metasalmon untouched.** Its PR #120 carries the vendored copy; re-vendoring
   after this merges is Brett's, and it must come from this branch tip.
+
+### Two adjacent overstatements fixed in the same pass
+
+Found by re-reading the moved text against the measurements rather than against
+itself, and both were in the inherited wording:
+
+1. *"the direct-typing reading makes every method target this ecosystem emits
+   non-conformant"* — false for smn, whose six concepts **are** directly typed
+   and would pass. Narrowed to gcdfo targets.
+2. *"Every method target the ecosystem currently emits is conformant under the
+   ruled reading"* — false, and it contradicted **B-148**. Verified with
+   `rdflib`: `gcdfo:EstimateMethod` is an untyped `skos:Concept` with **no**
+   `skos:broader` at all — a terminus — and **ten** concepts sit beneath it, so
+   those reach no typed ancestor and fail under *either* reading. The ADR now
+   says so and names it as the reason B-48 is gated, instead of claiming a
+   conformance the vocabulary does not deliver.
