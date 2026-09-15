@@ -299,3 +299,4 @@ These documents provide guidance and implementation detail but do not change val
 - `docs/i-adopt-integration-guide.md`
 - `docs/observation-structure-guide.md`
 - `docs/adr/0001-observation-structure-and-procedure-metadata.md`
+- `docs/adr/0002-sosa-procedure-reachability.md` (the reasoning behind the two SOSA Procedure rules in `schema/sdp.rules.yaml`)

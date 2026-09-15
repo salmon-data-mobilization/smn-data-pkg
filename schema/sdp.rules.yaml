@@ -49,64 +49,8 @@ rules:
     Every structure has at least one dimension, and repeated rows with the same
     dictionary-type-normalized dimension tuple have identical normalized measure and
     bound attribute values.
-# The two SOSA Procedure rules - methods_are_sosa_procedures here and
-# row_varying_procedures_use_codes below - state one reachability condition,
-# ruled by Brett on 2026-09-14. Both had previously said that a method IRI
-# "resolves to a shared vocabulary concept typed as a SOSA Procedure". That
-# phrase is gone for two reasons. It read as a per-IRI HTTP dereference, and
-# neither smn nor gcdfo is served for one. And it never said which of two
-# readings it meant - direct typing, or reachability through a concept
-# hierarchy - so the wording and the shipped modelling drifted apart with
-# nothing to catch it, because neither rule has ever been executed by any
-# implementation.
-#
-# Why the condition is reachability, and why the refused edge is named rather
-# than merely left unpermitted. Reachability subsumes direct typing, so the
-# zero-length case is a pass and the stricter reading is not overruled by the
-# looser one; it is also the shape smn's own ontology/shapes/method-shapes.ttl
-# already uses (sh:zeroOrMorePath skos:broader), so the spec and the shipped
-# shape now agree by construction instead of by coincidence. The asserted edge
-# to an OWL class is refused by name because it is the shape someone reaches
-# for on the way to satisfying this rule, and it looks like it would work.
-# Every sub-property of skos:semanticRelation carries rdfs:domain skos:Concept
-# and rdfs:range skos:Concept (SKOS S19-S22), and S41 makes skos:broadMatch a
-# sub-property of skos:broader, so asserting "<method> skos:broader
-# sosa:Procedure" entails "sosa:Procedure rdf:type skos:Concept" - it re-types
-# W3C's class as an individual - and entails nothing whatsoever about <method>,
-# or anything else, being a Procedure. Measured rather than argued: under OWL 2
-# RL closure the punned graph gives "sosa:Procedure rdf:type skos:Concept" true
-# and "<method> rdf:type sosa:Procedure" false. It costs a metamodelling
-# commitment and buys no entailment. A rule that only withheld permission would
-# leave a reader to infer the refusal from an absence, and an absence is not a
-# refusal.
-#
-# Why the condition is a check and not an entailment. sosa:usedProcedure
-# declares only schema:rangeIncludes sosa:Procedure - an annotation property
-# with informal semantics and no inferential force, per section 3 of the SSN
-# specification - so no reasoner infers that a bound term is a Procedure.
-# skos:broader carries no subclass entailment either, so nothing supplies the
-# reachability. Both halves have to be read from the vocabulary, which is why
-# this is written as a check.
-#
-# Why estimate-type and data-quality vocabularies are named. gcdfo's Hyatt
-# (1997) estimate types are ordinal quality ratings for escapement estimates,
-# and Brett ruled on 2026-08-17 that that scheme is specifically only for
-# escapement measurements and must not be the mapping target for general
-# data-quality codes. Such terms sit in the same tables and next to the same
-# method columns, so they are the ones most likely to be offered to these two
-# rules by mistake. Naming them costs two sentences; catching it per package in
-# review costs more.
-#
-# Retirement condition for the unresolved outcome, which is a skip and
-# therefore owes one. It exists only because a validator may hold no copy of
-# the vocabulary that declares a namespace. It becomes unnecessary once pinned
-# smn and gcdfo snapshots ship in metasalmon's inst/extdata and in the
-# metasalmonpy equivalent, because every namespace will then either resolve
-# against the pinned snapshot or be genuinely outside the spec's knowledge, and
-# the check can report absent or unreachable in every case. Until then a run
-# whose IRIs were all unresolved has checked nothing - which is why unresolved
-# is not an executing check for the rule id and escalates to an error under
-# require_iris = TRUE.
+# Rationale, the ruled reading, the refused owl:Class edge and the unresolved
+# outcome's retirement condition: docs/adr/0002-sosa-procedure-reachability.md
 - id: methods_are_sosa_procedures
   severity: error
   description: >-
@@ -171,9 +115,9 @@ rules:
     different variables - and resolves to an I-ADOPT StatisticalModifier concept
     (recommended vocabulary smn:StatisticalModifierScheme). A method is never
     recorded here.
-# Same reachability condition, same refused edge and same three outcomes as
-# methods_are_sosa_procedures; the reasoning and the unresolved outcome's
-# retirement condition are in the comment above that rule.
+# Same condition, refused edge and three outcomes as
+# methods_are_sosa_procedures; rationale in
+# docs/adr/0002-sosa-procedure-reachability.md
 - id: row_varying_procedures_use_codes
   severity: error
   description: >-

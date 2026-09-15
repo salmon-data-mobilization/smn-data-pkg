@@ -78,20 +78,23 @@ byte-identical to `main`, because B-48's test keys on rule ids.
   actually bites — and states the consequence precisely: such a `term_iri` is
   **outside this rule's scope**, not a term that fails it.
 
-- **An adjacent comment block** above `methods_are_sosa_procedures` (with a
-  three-line pointer above `row_varying_procedures_use_codes`) carries what is
-  reasoning rather than rule: why "resolves to" went, why reachability subsumes
-  direct typing, the OWL-punning measurement, why the condition is a check, why
-  the two vocabularies are named, and the unresolved outcome's retirement
-  condition. The file is input-only to `scripts/generate_artifacts.py` (it reads
-  `version` and `profile`; it never writes the file), so comments are durable —
-  checked before relying on it.
+- **A two-line pointer** above each rule, and nothing more. The reasoning —
+  why "resolves to" went, why reachability subsumes direct typing, the
+  OWL-punning measurement, why the condition is a check, why the two
+  vocabularies are named, and the unresolved outcome's retirement condition —
+  moved out of the file on review; see **Review round 2** below. The file is
+  input-only to `scripts/generate_artifacts.py` (it reads `version` and
+  `profile`; it never writes the file), so comments are durable — checked before
+  relying on it.
 
 ### `CHANGELOG.md`
 
-One entry under `## [Unreleased]` → `### Changed`, stating the new reading, all
-four clauses of the ruling, the three outcomes, that no rule id changed, and
-that nothing executes either rule yet (#48).
+One entry under `## [Unreleased]` → `### Changed`, opening with a plain-language
+summary of what changed and what it means for someone using the package, then
+the specification wording: the new reading, the clauses of the ruling, the three
+outcomes, that no rule id changed, and that nothing executes either rule yet
+(#48). A second entry under `### Added` for the new ADR. Both shaped by review;
+see **Review round 2** below.
 
 ## Commands run, and results
 
@@ -118,6 +121,11 @@ python3 -c "import yaml; d=yaml.safe_load(open('schema/sdp.rules.yaml')); ..."
      ids identical to main, the two descriptions 3266 and 1346 chars
 ```
 
+Every command was re-run unchanged after the review-round-2 edit, with identical
+results; the parse check was widened to compare ids, severities, `version`,
+`profile` and all fourteen descriptions against both the first commit and
+`origin/main`. See **Review round 2** below.
+
 ### Failing-before / passing-after
 
 **There is no red-to-green to show, and that is the finding rather than a gap in
@@ -141,11 +149,13 @@ NuSEDS example red on day one.
 
 ## What I did not do, and why
 
-- **Did not touch `SPECIFICATION.md`.** It restates the old wording nearly
-  verbatim in two places and now contradicts the rules file. That is a real
-  defect and it is **out of this item's scope** — see the candidate new item
-  below. `retires_when` names the rules file and the vendored copy and stops
-  there, and HUB.md forbids widening a claimed item.
+- **Did not reword `SPECIFICATION.md`.** It restates the old wording nearly
+  verbatim in two places (lines 237–238 and 265) and now contradicts the rules
+  file. That is a real defect and it is **out of this item's scope** — it is
+  **B-167**, below. `retires_when` names the rules file and the vendored copy and
+  stops there, and HUB.md forbids widening a claimed item. The one line added to
+  its "Non-normative guides" list in review round 2 is an index entry at line
+  302, nowhere near either stale passage, and restates no rule.
 - **Did not touch `docs/field-reference.md`,
   `docs/i-adopt-integration-guide.md`, `templates/.../README.md`,
   `template-source/.../README.md`, or
@@ -153,7 +163,10 @@ NuSEDS example red on day one.
   phrasing. Same reason; two of them are generated, so editing them also moves a
   generated artifact.
 - **Did not touch `docs/adr/0001-...md`.** An ADR is a dated record of a
-  decision and is not corrected in place.
+  decision and is not corrected in place. Review round 2 added
+  `docs/adr/0002-sosa-procedure-reachability.md`, which **supersedes** 0001's
+  "resolves to a registered method" sentence on that point and says so, rather
+  than editing 0001.
 - **Did not implement any check.** That is B-48.
 - **Did not change a rule id, severity, `version` or `profile`.**
 
@@ -174,7 +187,14 @@ NuSEDS example red on day one.
   `sosa:Procedure` itself. This item makes the spec refuse it; fixing smn is
   B-147, in a repository agents may not push to.
 
-### Candidate new item (no id yet)
+### Now **B-167** (was "candidate new item, no id yet")
+
+Promoted to an item after this branch was first pushed: **B-167**, `icebox`, P3,
+`blocked_by: [B-106]`, repo `smn-data-pkg`. Its `retires_when` splits the sites
+into four hand-edited and two generated, which this table did not, and adds a
+requirement this item cannot discharge for it: *the reworded prose must carry its
+own justification rather than inheriting B-106's*. The ADR added in review round
+2 is the document that justification can cite.
 
 **`SPECIFICATION.md` and four other documents restate the two rules' old
 wording, and now contradict `schema/sdp.rules.yaml`.** Evidence, measured on
@@ -215,8 +235,11 @@ IRI and therefore cannot decide between *absent* and *unreachable*.
   `inst/extdata` and in the metasalmonpy equivalent, so every namespace either
   resolves against the pinned snapshot or is genuinely outside the spec's
   knowledge, and the check can report *absent* or *unreachable* in every case.
-  Stated in the comment block above `methods_are_sosa_procedures` as well as
-  here, because the file is where a validator author will read it.
+  Stated in `docs/adr/0002-sosa-procedure-reachability.md` under its own heading
+  as well as here. Review round 2 moved it there out of the rules file; the rules
+  file's pointer names it by name, `docs/entrypoints.md` names it, and
+  `SPECIFICATION.md`'s guide list points at the ADR, so it is reachable from all
+  three places a maintainer would start from.
 
 ## Paired change in another repository
 
@@ -231,3 +254,108 @@ which is what was done — the file was copied, not retyped.
 It is a different repository, so it cannot be in this commit. It lands as a
 **second branch and second draft pull request in metasalmon**, off current
 `main`, which must not merge before this one.
+
+**Review round 2 changed this file's bytes again**, so the vendored copy must be
+re-vendored from *this* branch tip and not from the first commit. The
+byte-identity property (verified last time by identical git blob SHA) has to
+survive the merge; Brett re-vendors after merging.
+
+## Review round 2 — 2026-09-15
+
+Brett reviewed PR #8 and left two comments. Both addressed here; neither thread
+replied to or resolved, which is his.
+
+### 1. `schema/sdp.rules.yaml` line 52 — "Are these comments necessary here? I feel like they should be in other documentation so that we don't clutter up the rules"
+
+Agreed, and done as a **move, not a cut**: B-106's `retires_when` requires the
+unresolved skip to carry its own retirement condition, and metasalmon's
+`AGENTS.md` requires any suppression to say what retires it, so deleting the
+reasoning was not available.
+
+**Where it went: `docs/adr/0002-sosa-procedure-reachability.md`** (new). Chosen
+because `docs/adr/` is what this repository already uses for *why a modelling
+decision went that way* — `docs/adr/0001-observation-structure-and-procedure-metadata.md`
+exists and is listed in `SPECIFICATION.md`'s "Non-normative guides" — and
+because the content is exactly an ADR: a dated ruling (Brett, Q47, 2026-09-14),
+its context in measured vocabulary facts, its consequences, and the alternatives
+rejected. Following the existing convention beat inventing a location.
+
+Rejected locations:
+
+- **`SPECIFICATION.md`** — it is normative, it is where the *old* wording still
+  lives in two places, and putting new reasoning into it would entangle this
+  change with **B-167**. One index line was added to its guide list at line 302;
+  nothing was added near lines 237–238 or 265.
+- **`docs/i-adopt-integration-guide.md`** — a usage guide, not a decision
+  record. It answers "how do I record a method", not "why is this the condition".
+- **Editing ADR 0001** — a dated record is superseded, not corrected in place.
+  0002 says which sentence of 0001 it supersedes.
+
+**Left in the rules file**, above `methods_are_sosa_procedures`:
+
+```yaml
+# Rationale, the ruled reading, the refused owl:Class edge and the unresolved
+# outcome's retirement condition: docs/adr/0002-sosa-procedure-reachability.md
+```
+
+and above `row_varying_procedures_use_codes`:
+
+```yaml
+# Same condition, refused edge and three outcomes as
+# methods_are_sosa_procedures; rationale in
+# docs/adr/0002-sosa-procedure-reachability.md
+```
+
+The pointer names the retirement condition rather than merely the file, so a
+reader of the rules file is told it exists and where. The file went from 200
+lines to 144; the 58-line block and the 3-line pointer are gone.
+
+Two indexes now carry the ADR so it is not findable only from the rules file:
+`docs/entrypoints.md` ("Canonical Implementations") and `SPECIFICATION.md`
+("Non-normative guides").
+
+### 2. `CHANGELOG.md` line 10 — "Start with a concise summary in plain language"
+
+The entry now opens with what changed and what it means, in language that does
+not require knowing what `skos:broader` is: a method term may qualify through a
+broader term in the vocabulary that defines it, instead of having to be labelled
+a procedure itself; the survey-method terms both salmon vocabularies actually
+publish ("aerial survey count", "redd count", "trap count") therefore work. It
+then names the two things that got **stricter**, which is the part a package
+author should check their own package against — a quality or estimate-type code
+is never a method term, and an unfetchable vocabulary must be reported rather
+than passed. The specification wording follows in a second paragraph, and the
+SKOS/OWL argument is no longer restated there at all; it points at the ADR.
+
+### Re-verified after the edit
+
+```
+python3 -m pytest tests/ -q                    -> 38 passed (exit 0)
+python3 -m unittest discover -s tests          -> Ran 38 tests ... OK
+python3 scripts/generate_artifacts.py --check  -> Generated artifacts are in sync. (exit 0)
+python3 scripts/validate_package.py examples/minimal-example
+                                               -> Strict SDP validation passed (exit 0)
+python3 scripts/validate_package.py examples/mixed-grain-example
+                                               -> Strict SDP validation passed (exit 0)
+git diff --check                               -> clean
+```
+
+Identical to the first round, and to the baseline measured on this branch before
+the edit. `generate_artifacts.py` writes only `docs/field-reference.md` under
+`docs/`, so a new file in `docs/adr/` cannot desynchronise it — confirmed by
+`--check` and by reading `FIELD_REFERENCE_PATH`.
+
+Parse check, widened this round: `version` `sdp-0.3.0`, `profile`, 14 rules, and
+the ids, severities **and all fourteen descriptions** identical to both the first
+commit on this branch and `origin/main`. **Only comments changed**, so nothing
+B-48 keys on moved. The rules file is still pure ASCII.
+
+### Not done, deliberately
+
+- **Not merged, and neither review thread replied to or resolved.** Brett's.
+- **PR #8's body is now partly stale** — it says "An adjacent comment block
+  carries what is reasoning rather than rule", and its verification table
+  predates this round. Editing a pull request body is not a write `HUB.md`'s
+  register permits, so it is flagged rather than fixed.
+- **metasalmon untouched.** Its PR #120 carries the vendored copy; re-vendoring
+  after this merges is Brett's, and it must come from this branch tip.
