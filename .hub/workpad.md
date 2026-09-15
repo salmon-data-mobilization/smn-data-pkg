@@ -327,6 +327,38 @@ is never a method term, and an unfetchable vocabulary must be reported rather
 than passed. The specification wording follows in a second paragraph, and the
 SKOS/OWL argument is no longer restated there at all; it points at the ADR.
 
+### A factual error found while moving the text, and corrected
+
+The paragraph being moved said gcdfo 0.0.9 *"types only its broad enumeration
+concept `rdf:type sosa:Procedure`"*. **That is wrong, and it was carried from the
+first round of this item.** Re-measured this round by parsing
+`docs/releases/0.0.9/gcdfo.ttl` with `rdflib` rather than by reading it:
+
+```
+gcdfo 0.0.9 subjects typed sosa:Procedure -> exactly one:
+  https://w3id.org/smn/EnumerationMethod
+gcdfo:EnumerationMethodScheme members      -> 11, of which 10 are gcdfo: terms,
+  every one an untyped skos:Concept with skos:broader smn:EnumerationMethod
+```
+
+gcdfo types **none of its own terms** `sosa:Procedure`. The single typed subject
+is an **smn** IRI whose typing gcdfo restates. So "ten of eleven gcdfo method
+concepts" overcounted by one and attributed an smn term to gcdfo.
+
+The consequence is not cosmetic and is now recorded in the ADR: **the qualifying
+path crosses a vocabulary boundary, and in practice it always does.** A B-48
+check cannot decide either rule from the vocabulary that declares the IRI alone
+— it has to follow `skos:broader` into whatever vocabulary the next hop lands
+in, and an unresolvable hop is `unresolved`, not `unreachable`. The rule text
+never restricted the path to one vocabulary, so this records that the
+distinction is load-bearing rather than changing the rule.
+
+smn's side of the claim re-measured the same way and **held**: exactly six
+concepts typed `skos:Concept, sosa:Procedure` in
+`ontology/modules/07-controlled-vocabularies.ttl`, and
+`sh:zeroOrMorePath skos:broader` present in `ontology/shapes/method-shapes.ttl`
+with the `owl:someValuesFrom` explanation in module 02.
+
 ### Re-verified after the edit
 
 ```

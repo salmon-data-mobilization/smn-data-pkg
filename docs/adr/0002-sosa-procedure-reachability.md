@@ -25,15 +25,19 @@ reachability through a concept hierarchy — so the wording and the shipped
 modelling drifted apart with nothing to catch it. Measured against the released
 vocabularies:
 
-- Released **gcdfo 0.0.9** types only its broad enumeration concept
-  `rdf:type sosa:Procedure`. The ten narrower survey methods
+- Released **gcdfo 0.0.9** carries exactly one `rdf:type sosa:Procedure`
+  assertion in the whole graph, and its subject is **`smn:EnumerationMethod`** —
+  a Salmon Domain Ontology term whose typing gcdfo restates, not a gcdfo term.
+  Every one of the ten gcdfo concepts in `gcdfo:EnumerationMethodScheme`
   (`gcdfo:VisualGroundCount`, `gcdfo:FixedSiteCensusManual`,
   `gcdfo:AerialSurveyCount`, `gcdfo:HydroacousticSonarCount`,
   `gcdfo:TrapCount`, `gcdfo:ReddCount`, `gcdfo:ElectrofishingCount`,
   `gcdfo:MarkRecaptureFieldProgram`, `gcdfo:VisualSnorkelCount`,
-  `gcdfo:FixedSiteCensusElectronic`) are untyped `skos:Concept`s that reach it
-  by `skos:broader`.
-- **smn** does the same. It types six concepts `skos:Concept, sosa:Procedure` in
+  `gcdfo:FixedSiteCensusElectronic`) is an untyped `skos:Concept` that reaches
+  it by a single `skos:broader` step. **So the qualifying path crosses a
+  vocabulary boundary**, from gcdfo into smn — see Consequences.
+- **smn** does the same. It types exactly six concepts
+  `skos:Concept, sosa:Procedure` in
   `ontology/modules/07-controlled-vocabularies.ttl` and expresses the narrower
   constraint as a `skos:broader` path in `ontology/shapes/method-shapes.ttl`,
   with an in-file comment saying why: `owl:someValuesFrom` cannot range over
@@ -151,6 +155,14 @@ it as an error instead of skipping it.
 
 - Every method target the ecosystem currently emits is conformant under the
   ruled reading, where most were non-conformant under direct typing.
+- **The qualifying path can cross a vocabulary boundary, and in practice it
+  always does.** Every gcdfo survey-method concept qualifies through
+  `smn:EnumerationMethod`, an smn term. A check therefore cannot decide either
+  rule by reading only the vocabulary that declares the IRI; it has to follow
+  `skos:broader` into whatever vocabulary the next hop lands in, and treat a hop
+  it cannot resolve as `unresolved` rather than `unreachable`. Nothing in the
+  rule restricts the path to one vocabulary — this records that the distinction
+  is load-bearing rather than hypothetical.
 - A validator author implementing hub backlog #48 reads the condition from
   `schema/sdp.rules.yaml` and the reasoning from here. The rules file carries a
   two-line pointer to this document and no longer carries the argument inline.
@@ -164,9 +176,10 @@ it as an error instead of skipping it.
 
 - **Direct typing only** — every method or protocol IRI carries
   `rdf:type sosa:Procedure` itself. Rejected as measured rather than as a
-  preference: it makes ten of gcdfo 0.0.9's eleven method concepts
-  non-conformant and contradicts smn's own shipped shape. It is not discarded
-  either, because reachability contains it as the zero-length case.
+  preference: it makes **all ten** of gcdfo 0.0.9's survey-method concepts
+  non-conformant — gcdfo types none of its own terms — and contradicts smn's own
+  shipped shape. It is not discarded either, because reachability contains it as
+  the zero-length case.
 - **Accept an asserted `skos:broader`/`skos:broadMatch` to `sosa:Procedure`** —
   refused; see above. It is the literal shape Q47 asked about, and the "no" half
   of the ruling.
