@@ -8,6 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **A method term may now qualify through a broader term in the vocabulary that
+  defines it, instead of having to be labelled a procedure itself.** The two
+  rules covering method terms in `schema/sdp.rules.yaml` —
+  `methods_are_sosa_procedures` and `row_varying_procedures_use_codes` — used to
+  read as requiring the exact term you cite to carry that label directly, which
+  would have rejected almost every specific survey-method term the DFO Salmon
+  Ontology and the Salmon Domain Ontology actually publish: "aerial survey
+  count", "redd count" and "trap count" each sit beneath a general
+  enumeration-method term that carries the label, rather than carrying it
+  themselves. Both are now accepted, so packages citing those terms are valid,
+  which is what was always intended and what both vocabularies already ship. Two
+  things did get stricter, and they are the parts worth checking your own package
+  against. A code that says **how good a value is** — a Hyatt (1997) estimate
+  type, an information- or index-quality rating, a reliability flag — is never a
+  method term, because a method says **how a value was produced**; a column of
+  those is an ordinary categorical column and is not bound as a procedure. And a
+  validator that cannot fetch the vocabulary a term belongs to must now say it
+  could not check, where the old wording said nothing and left a silent pass
+  available.
+
+  In specification terms (hub backlog #106, ruled by Brett 2026-09-14): a method
+  or protocol IRI, and every `codes.csv` `term_iri` on a component bound with
+  `sosa:usedProcedure`, is **declared by a shared vocabulary** and **reaches a
+  resource carrying `rdf:type sosa:Procedure` by a `skos:broader` path of zero or
+  more steps** — so a directly typed IRI passes as the zero-length case, and a
+  SKOS narrower concept qualifies on an ancestor's typing. This is the shape
+  smn's own `ontology/shapes/method-shapes.ttl` already uses
+  (`sh:zeroOrMorePath skos:broader`) and the shape gcdfo's method concepts
+  already have, so the spec and the shipped modelling now agree by construction
+  rather than by coincidence. **The phrase "resolves to" is dropped**, because it
+  read as a per-IRI HTTP dereference and neither vocabulary is served for one.
+  **An asserted `skos:broader`, `skos:broadMatch` or any other sub-property of
+  `skos:semanticRelation` whose other side is an `owl:Class` is refused by
+  name.** Both rules now specify the three outcomes a check reports —
+  **absent**, **unreachable**, **unresolved** — each with its own message, with
+  **unresolved skipped rather than passed**: it is not an executing check for the
+  rule id and it escalates to an error under `require_iris = TRUE`. No rule `id`
+  changed, and nothing executes either rule yet — that is hub backlog #48, which
+  builds its dispatch on this text. The reasoning behind all of it, the refused
+  edge in full, and the retirement condition of the `unresolved` outcome are in
+  the new `docs/adr/0002-sosa-procedure-reachability.md`; the rules file carries
+  a two-line pointer to it rather than the argument.
 - Descriptor `schema.fields` entries may carry the column dictionary's
   semantic annotation keys — `unit_iri`, `term_iri`, `term_type`,
   `property_iri`, `entity_iri`, `constraint_iri`,
@@ -57,6 +99,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   example string moved with them.
 
 ### Added
+- `docs/adr/0002-sosa-procedure-reachability.md` — the reasoning behind the two
+  SOSA Procedure rules: why the condition is reachability rather than direct
+  typing, why an asserted `skos:broader`/`skos:broadMatch` edge to an `owl:Class`
+  is refused, why estimate-type and data-quality vocabularies are never method
+  vocabularies, and what retires the `unresolved` outcome. Non-normative;
+  `schema/sdp.rules.yaml` remains the normative statement of both rules and now
+  points here instead of carrying the argument in adjacent comments.
 - Minimal GitHub Actions CI (`.github/workflows/ci.yml`): the unit tests and
   `generate_artifacts.py --check` run on every push to `main` and every pull
   request. No release automation.

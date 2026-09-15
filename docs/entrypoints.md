@@ -22,6 +22,7 @@ Purpose: keep one short, reliable map of what starts the system, what is wired i
 - Column metadata schema + measurement requirements → `SPECIFICATION.md` + `schema/frictionless/metadata/column_dictionary.schema.json` + `schema/sdp.rules.yaml`
 - Categorical codes meaning (canonical labels/IRIs live in codes.csv) → `SPECIFICATION.md` + `schema/frictionless/metadata/codes.schema.json` + `schema/sdp.rules.yaml`
 - SOSA procedure references (sdp-0.3.0 removed the `metadata/methods.csv` registry) → `SPECIFICATION.md` + `schema/frictionless/metadata/tables.schema.json` (`method_iri`) + `schema/frictionless/metadata/codes.schema.json` (`term_iri` for row-varying procedures) + `docs/i-adopt-integration-guide.md`
+- Why a method term qualifies by *reaching* `sosa:Procedure` rather than by being typed one, and what retires the `unresolved` outcome → `docs/adr/0002-sosa-procedure-reachability.md` (the rules themselves stay in `schema/sdp.rules.yaml`)
 - Mixed-grain measure/dimension bindings → `schema/frictionless/metadata/observation_*.schema.json` + `schema/sdp.rules.yaml` + `docs/observation-structure-guide.md`
 - Reproducibility sidecar layout → `SPECIFICATION.md` + `examples/mixed-grain-example/reproducibility/`
 - Human quickstart guide → `README.md` ("Quick Start" section; no separate quickstart document exists under docs/)
