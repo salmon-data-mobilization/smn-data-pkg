@@ -25,8 +25,8 @@ One row per dataset.
 | license | string | required | License name or URL. | Examples: `CC-BY-4.0`, `Open Government Licence - Canada` |
 | contact_org | string | optional | Organization for contact_name. Leave blank if already clear from contact_name or creator. |  |
 | contact_position | string | optional | Role or title for contact_name, mainly useful when contact_name is an individual. |  |
-| temporal_start | string | optional | Start date or year covered by the dataset. | Examples: `1996`, `1996-01-01` |
-| temporal_end | string | optional | End date or year covered by the dataset. | Examples: `2024`, `2024-12-31` |
+| temporal_start | string | optional | Start of the period covered by the dataset: a year, a date, or an ISO 8601 instant in UTC. | Examples: `1996`, `1996-01-01`, `1996-01-01T00:00:00Z` |
+| temporal_end | string | optional | End of the period covered by the dataset: a year, a date, or an ISO 8601 instant in UTC. | Examples: `2024`, `2024-12-31`, `2024-12-31T23:59:59Z` |
 | spatial_extent | string | optional | Textual description of spatial coverage. |  |
 | dataset_type | string | optional | High-level dataset type. |  |
 | source_citation | string | optional | Citation for reports, publications, source databases, or internal documentation. |  |

@@ -71,6 +71,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rejected, as the whole-entry comparison rejected it (Table Schema
   `constraints` must be an object).
 
+- `dataset.csv` `temporal_start` and `temporal_end` now also accept an ISO
+  8601 instant in UTC, `YYYY-MM-DDTHH:MM:SSZ` (`T` separator, `Z` zone
+  marker, four-digit year, no fractional second), alongside the existing
+  year and date forms. Until now the profile admitted no instant at all, so a
+  package carrying a typed datetime in its temporal coverage was invalid
+  against its own profile even after both implementations were made to spell
+  it the same way. Brett ruled 2026-09-16 on hub question Q-51: *"Regarding
+  question 51, I rule that we go with A"* -- widen the pattern rather than
+  refuse the instant at the writer. The schema pattern, both field
+  descriptions and examples, the specification prose, the generated field
+  reference, and the reference validator's calendar check
+  (`validate_temporal_value`) all move together; the validator's second
+  layer had to move because a widened pattern alone would still have
+  rejected the instant one check later. An unpadded pre-1000 year
+  (`999-06-05T13:45:30Z`, the readr residual, hub item B-161) is still
+  rejected on purpose.
+
 ### Fixed
 - The four `ObservationStructureValidationTests` that still asserted the
   pre-0.3.0 method registry (`metadata/methods.csv`, dictionary `method_iri`)
