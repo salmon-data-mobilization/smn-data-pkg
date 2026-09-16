@@ -244,15 +244,33 @@ class Validator:
                     self.error(f"{location} must be an absolute IRI; found {iri!r}.")
 
     def validate_temporal_value(self, value: str, location: str) -> None:
+        # Second layer behind the schema pattern: the pattern fixes the shape,
+        # this checks the calendar. The three shapes are the ones the profile
+        # admits -- a year, a date, or an ISO 8601 instant in UTC. The instant
+        # form is the one Brett ruled 2026-09-16 (hub question Q-51, option A):
+        # T separator, Z zone marker, four-digit year, no fractional second.
+        # strptime's %Y takes exactly four digits, so an unpadded pre-1000
+        # year (hub item B-161, the readr residual) stays rejected here too.
         if re.fullmatch(r"\d{4}", value):
             year = int(value)
             if year < 1:
                 self.error(f"{location} year must be between 0001 and 9999.")
             return
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value):
+            try:
+                datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+            except ValueError:
+                self.error(
+                    f"{location} must be a valid YYYY-MM-DDTHH:MM:SSZ instant."
+                )
+            return
         try:
             date.fromisoformat(value)
         except ValueError:
-            self.error(f"{location} must be a valid YYYY year or YYYY-MM-DD date.")
+            self.error(
+                f"{location} must be a valid YYYY year, YYYY-MM-DD date, "
+                "or YYYY-MM-DDTHH:MM:SSZ instant."
+            )
 
     def validate_identity_and_joins(self, data: PackageData) -> None:
         metadata = data.metadata

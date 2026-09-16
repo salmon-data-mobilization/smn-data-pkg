@@ -157,7 +157,7 @@ The authoritative machine-readable metadata field names, order, types, requireme
 
 The generated human-readable field reference is `docs/field-reference.md`. Do not maintain duplicate field tables in this file.
 
-`metadata/dataset.csv` temporal coverage fields, `temporal_start` and `temporal_end`, accept either a year (`YYYY`) or a full date (`YYYY-MM-DD`). Partial dates such as `YYYY-MM` are invalid.
+`metadata/dataset.csv` temporal coverage fields, `temporal_start` and `temporal_end`, accept a year (`YYYY`), a full date (`YYYY-MM-DD`), or an ISO 8601 instant in UTC (`YYYY-MM-DDTHH:MM:SSZ`: `T` separator, `Z` zone marker, four-digit year, no fractional second). Partial dates such as `YYYY-MM` are invalid, and so is any other instant spelling -- a space separator, a missing or offset zone marker such as `+00:00`, a fractional second, or a year of fewer than four digits.
 
 ## Measurement column requirements
 

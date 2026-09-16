@@ -78,6 +78,56 @@ class StrictValidationTests(unittest.TestCase):
 
         self.assertHasError("temporal_start must match pattern")
 
+    def test_accepts_iso_instant_temporal_coverage(self) -> None:
+        # Hub question Q-51, ruled 2026-09-16 (option A): the profile admits
+        # an ISO 8601 instant in UTC in the temporal coverage fields. Before
+        # this the pattern admitted a year or a date only, so the instant
+        # spelling both implementations converged on was one the profile
+        # forbade.
+        path = self.package_path / "metadata" / "dataset.csv"
+        rows = read_csv(path)
+        rows[0]["temporal_start"] = "1996-01-01T00:00:00Z"
+        rows[0]["temporal_end"] = "2024-12-31T23:59:59Z"
+        write_csv(path, rows, rows[0].keys())
+
+        self.assertEqual([], self.errors())
+
+    def test_rejects_every_other_instant_spelling(self) -> None:
+        # Only the ruled spelling is admitted: T separator, Z zone marker,
+        # four-digit year, no fractional second. The unpadded year is the
+        # readr residual (hub item B-161) and stays rejected here on purpose.
+        rejected = {
+            "no zone marker": "2024-12-31T00:00:00",
+            "space separator": "2024-12-31 00:00:00",
+            "offset zone marker": "2024-12-31T00:00:00+00:00",
+            "fractional second": "2024-12-31T00:00:00.5Z",
+            "unpadded year": "999-06-05T13:45:30Z",
+            "two-digit year": "24-12-31",
+        }
+        source = ROOT / "examples" / "minimal-example" / "metadata" / "dataset.csv"
+        path = self.package_path / "metadata" / "dataset.csv"
+        for label, value in rejected.items():
+            with self.subTest(label, value=value):
+                rows = read_csv(source)
+                rows[0]["temporal_end"] = value
+                write_csv(path, rows, rows[0].keys())
+
+                self.assertHasError("temporal_end must match pattern")
+
+    def test_rejects_instant_that_matches_the_pattern_but_not_the_calendar(self) -> None:
+        # The pattern fixes the shape; validate_temporal_value checks the
+        # calendar behind it, as it already did for a date.
+        path = self.package_path / "metadata" / "dataset.csv"
+        rows = read_csv(path)
+        rows[0]["temporal_end"] = "2024-13-01T00:00:00Z"
+        write_csv(path, rows, rows[0].keys())
+
+        errors = self.errors()
+        self.assertFalse(
+            any("must match pattern" in error for error in errors), errors
+        )
+        self.assertHasError("must be a valid YYYY-MM-DDTHH:MM:SSZ instant")
+
     def test_rejects_missing_categorical_code_coverage(self) -> None:
         path = self.package_path / "metadata" / "codes.csv"
         rows = [
