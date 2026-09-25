@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [sdp-0.3.1] - 2026-09-25
+
 ### Changed
 - **A method term may now qualify through a broader term in the vocabulary that
   defines it, instead of having to be labelled a procedure itself.** The two
