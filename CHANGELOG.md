@@ -125,7 +125,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   points here instead of carrying the argument in adjacent comments.
 - Minimal GitHub Actions CI (`.github/workflows/ci.yml`): the unit tests and
   `generate_artifacts.py --check` run on every push to `main` and every pull
-  request. No release automation.
+  request.
+- A release workflow (`.github/workflows/release.yml`), run by hand with a
+  version and the full SHA of the commit that made it current. It pushes an
+  annotated `sdp-X.Y.Z` tag on that commit and publishes a GitHub Release
+  whose body is the version's section of this file as that commit has it. It
+  refuses, rather than warns, on a commit off `main`'s first-parent line, a
+  changelog that does not introduce exactly one dated `## [sdp-X.Y.Z]` heading
+  or still has entries under `[Unreleased]`, a profile other than the
+  version's `vX.Y` profile, an existing release, and an existing tag that is
+  lightweight or on another commit.
 
 ## [sdp-0.3.0] - 2026-08-14
 

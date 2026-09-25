@@ -2,7 +2,7 @@
 # push to main and every pull request. Added 2026-08-21 because a 4-test-red
 # suite sat unnoticed on main after the sdp-0.3.0 method-model change — this
 # repo had no workflow at all to run it (metasalmon hub backlog #103).
-# Deliberately no release automation.
+# Releases are cut by release.yml, dispatched by hand, never from here.
 name: CI
 
 on:
