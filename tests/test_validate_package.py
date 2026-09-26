@@ -172,6 +172,17 @@ class StrictValidationTests(unittest.TestCase):
 
         self.assertEqual([], self.errors())
 
+    def test_null_descriptor_licenses_is_not_an_absent_key(self) -> None:
+        # The specification admits an absent key or an empty array, and
+        # Frictionless requires an array whenever the key is present.
+        set_dataset_cells(self.package_path, {"license": ""})
+        path = self.package_path / "datapackage.json"
+        descriptor = json.loads(path.read_text(encoding="utf-8"))
+        descriptor["licenses"] = None
+        path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
+
+        self.assertHasError("datapackage.json licenses must be absent")
+
     def test_descriptor_must_not_claim_a_license_the_dataset_does_not_state(self) -> None:
         # The example's descriptor keeps its Open Government Licence entry.
         set_dataset_cells(self.package_path, {"license": ""})

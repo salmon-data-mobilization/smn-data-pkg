@@ -898,12 +898,14 @@ class Validator:
         license_text = normalize_cell(dataset.get("license"))
         licenses = descriptor.get("licenses")
         if is_blank(license_text):
-            # No license stated, so the descriptor claims none: `licenses`
-            # absent, null, or an empty array.
-            if licenses not in (None, []):
+            # No license stated, so the descriptor claims none: `licenses` is
+            # absent or an empty array. The key's presence is tested rather
+            # than its value, because an explicit null is neither, and
+            # Frictionless requires an array whenever the key is present.
+            if "licenses" in descriptor and licenses != []:
                 self.error(
-                    "datapackage.json licenses must be absent when "
-                    "metadata/dataset.csv states no license."
+                    "datapackage.json licenses must be absent, or an empty array, "
+                    "when metadata/dataset.csv states no license."
                 )
             return
         if is_unresolved_placeholder(license_text):
