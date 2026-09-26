@@ -23,7 +23,7 @@
     }
   ],
   "sdp": {
-    "specVersion": "sdp-0.3.0",
+    "specVersion": "sdp-0.3.2",
     "metadata": {
       "dataset": "metadata/dataset.csv",
       "tables": "metadata/tables.csv",

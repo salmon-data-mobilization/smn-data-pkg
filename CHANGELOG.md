@@ -7,9 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [sdp-0.3.1] - 2026-09-25
+## [sdp-0.3.2] - 2026-09-26
 
 ### Changed
+- **The files now say `sdp-0.3.2`.** `schema/sdp.rules.yaml`'s `version`,
+  the v0.3 profile's `sdp:version`, `SPECIFICATION.md`,
+  `docs/field-reference.md`, the `spec_version` example in
+  `dataset.schema.json`, and both examples' `spec_version` and `specVersion`
+  read `sdp-0.3.2`. metasalmon fills a blank `spec_version` from the rules'
+  `version`, so a package it writes that uses this release's ISO instant now
+  declares the version that admits it. The entries below were first filed as
+  `sdp-0.3.1`, which was never tagged, and they ship in this release. The
+  profile keeps its v0.3 paths and published URLs.
 - **A method term may now qualify through a broader term in the vocabulary that
   defines it, instead of having to be labelled a procedure itself.** The two
   rules covering method terms in `schema/sdp.rules.yaml` —

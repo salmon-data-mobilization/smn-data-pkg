@@ -1,6 +1,6 @@
 # Salmon Data Package Specification
 
-**Version**: sdp-0.3.0
+**Version**: sdp-0.3.2
 **Author**: Brett Johnson, Data Stewardship Unit (DFO Pacific Region Science Branch)
 
 ## Scope
