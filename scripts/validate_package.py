@@ -25,6 +25,10 @@ TABLE_ORDER = generate_artifacts.TABLE_ORDER
 PROFILE_URL = generate_artifacts.PROFILE_URL
 SOSA_USED_PROCEDURE = "http://www.w3.org/ns/sosa/usedProcedure"
 
+# The license is recommended, not required, and any stated license is
+# accepted (Brett, 2026-09-26: most datasets assign none). These two keep the
+# canonical descriptor entry they had when they were the only two accepted: a
+# dataset that states one of them must carry exactly this name, title and path.
 KNOWN_LICENSES = {
     "Open Government Licence - Canada": {
         "name": "OGL-Canada-2.0",
@@ -37,6 +41,20 @@ KNOWN_LICENSES = {
         "path": "https://creativecommons.org/licenses/by/4.0/",
     },
 }
+
+# Text a metadata tool leaves in a field for a person to replace: the three
+# prose markers metasalmon and metasalmonpy write, and the REVIEW: marker on a
+# value still awaiting confirmation. It is a prompt, not a value. The pattern
+# is the union of metasalmon's `.ms_is_review_placeholder()` and
+# `.ms_is_review_iri()`: leading space and any case are allowed.
+#
+# It is applied to the license alone. The two-license allowlist refused every
+# placeholder there only because it refused everything else too, so accepting
+# any stated license would have let one through as a license.
+UNRESOLVED_PLACEHOLDER = re.compile(
+    r"^\s*(MISSING METADATA|MISSING DESCRIPTION|REVIEW REQUIRED|REVIEW)\s*:",
+    re.IGNORECASE,
+)
 
 IRI_FIELDS = {
     "dataset": ("protocol_iri",),
@@ -236,6 +254,9 @@ class Validator:
         if field["name"] in ("temporal_start", "temporal_end"):
             self.validate_temporal_value(value, location)
 
+        if table_name == "dataset" and field["name"] == "license":
+            self.validate_license_value(value, location)
+
         if field["name"] in IRI_FIELDS.get(table_name, ()):
             values = value.split(";") if field["name"] == "constraint_iri" else [value]
             for iri in values:
@@ -270,6 +291,17 @@ class Validator:
             self.error(
                 f"{location} must be a valid YYYY year, YYYY-MM-DD date, "
                 "or YYYY-MM-DDTHH:MM:SSZ instant."
+            )
+
+    def validate_license_value(self, value: str, location: str) -> None:
+        # Reached only for a non-blank value: a blank license states none,
+        # which is valid. Refused here, against the CSV field, rather than in
+        # the descriptor comparison, so a placeholder is refused whatever the
+        # descriptor carries, including the placeholder text itself.
+        if is_unresolved_placeholder(value):
+            self.error(
+                f"{location} holds an unresolved placeholder, {value!r}; "
+                "state a license or leave the field blank."
             )
 
     def validate_identity_and_joins(self, data: PackageData) -> None:
@@ -863,27 +895,48 @@ class Validator:
         self.validate_descriptor_data_resources(resources_by_path, data)
 
     def validate_descriptor_license(self, descriptor: dict, dataset: dict[str, str]) -> None:
-        license_text = dataset.get("license", "")
-        expected = KNOWN_LICENSES.get(license_text)
-        if expected is None:
-            self.error(
-                "metadata/dataset.csv license must be a known publication license "
-                f"({', '.join(sorted(KNOWN_LICENSES))}); found {license_text!r}."
-            )
-            return
+        license_text = normalize_cell(dataset.get("license"))
         licenses = descriptor.get("licenses")
+        if is_blank(license_text):
+            # No license stated, so the descriptor claims none: `licenses`
+            # absent, null, or an empty array.
+            if licenses not in (None, []):
+                self.error(
+                    "datapackage.json licenses must be absent when "
+                    "metadata/dataset.csv states no license."
+                )
+            return
+        if is_unresolved_placeholder(license_text):
+            # Already refused against the CSV field; there is no license here
+            # to compare the descriptor with.
+            return
         if not isinstance(licenses, list) or not licenses:
             self.error("datapackage.json licenses must include the dataset license.")
             return
+        entries = [entry for entry in licenses if isinstance(entry, dict)]
+        expected = KNOWN_LICENSES.get(license_text)
+        if expected is not None:
+            if not any(
+                all(entry.get(key) == value for key, value in expected.items())
+                for entry in entries
+            ):
+                self.error(
+                    "datapackage.json licenses must map "
+                    f"{license_text!r} to name={expected['name']!r}, "
+                    f"title={expected['title']!r}, and path={expected['path']!r}."
+                )
+            return
+        # Any other stated license: an SPDX-style identifier, a name or a URL.
+        # One entry must carry the same text in whichever of the three keys
+        # suits it.
         if not any(
-            all(resource_license.get(key) == value for key, value in expected.items())
-            for resource_license in licenses
-            if isinstance(resource_license, dict)
+            entry.get(key) == license_text
+            for entry in entries
+            for key in ("name", "title", "path")
         ):
             self.error(
-                "datapackage.json licenses must map "
-                f"{license_text!r} to name={expected['name']!r}, "
-                f"title={expected['title']!r}, and path={expected['path']!r}."
+                "datapackage.json licenses must carry the dataset license "
+                f"{license_text!r} as a license name, title, or path."
             )
 
     def validate_descriptor_contributors(self, descriptor: dict, dataset: dict[str, str]) -> None:
@@ -1027,6 +1080,10 @@ def normalize_typed_cell(value: object, field_type: str) -> str:
 
 def is_blank(value: object) -> bool:
     return normalize_cell(value) == ""
+
+
+def is_unresolved_placeholder(value: object) -> bool:
+    return UNRESOLVED_PLACEHOLDER.match(normalize_cell(value)) is not None
 
 
 def parse_bool(value: object) -> bool | None:

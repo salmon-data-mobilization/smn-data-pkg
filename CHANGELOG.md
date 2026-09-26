@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **The dataset license is recommended, not required** (Brett, 2026-09-26:
+  most datasets assign none). A package whose `metadata/dataset.csv` `license`
+  is blank is now valid, and its `datapackage.json` carries no `licenses`.
+  Before this change only `CC-BY-4.0` and `Open Government Licence - Canada`
+  passed. Now any stated license passes, whether an SPDX-style identifier, a
+  license name or a URL, as long as `licenses` carries the same text as an
+  entry's `name`, `title` or `path`; those two keep their canonical entry.
+  Text a metadata tool leaves for a person to replace (`MISSING METADATA:`,
+  `MISSING DESCRIPTION:`, `REVIEW REQUIRED:`, `REVIEW:`) is refused in the
+  field, so it cannot pass as a license now that any text can. In
+  `dataset.schema.json`, `license` drops `constraints.required` and takes
+  `sdp:requirement: recommended`, and `docs/field-reference.md` is
+  regenerated. No package that was valid before becomes invalid.
+
 ## [sdp-0.3.1] - 2026-09-25
 
 ### Changed
