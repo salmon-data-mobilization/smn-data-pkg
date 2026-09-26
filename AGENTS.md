@@ -53,6 +53,12 @@ That discovery is the durable part, and it is worth more than the column.
   `gcdfo` or the PSC CV, with a note saying what a term would have to say and
   where it should be minted. That register feeds the term-request pipeline.
 
+### Releases
+
+A release is an annotated `sdp-X.Y.Z` tag and a GitHub Release, both made by
+`.github/workflows/release.yml`. Its header says how one is cut, and what it
+refuses.
+
 ### Build and Test Commands
 
 ### Code Style Commands

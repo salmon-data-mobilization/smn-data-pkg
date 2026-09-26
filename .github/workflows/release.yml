@@ -1,0 +1,187 @@
+name: Release
+
+# Cuts a release of the specification: an annotated tag `sdp-X.Y.Z` on the
+# commit that made X.Y.Z the current version, and a GitHub Release whose body
+# is that version's CHANGELOG.md section as it stood at that commit. The
+# design is metasalmonpy's release workflow; what differs here is the tag
+# name, the changelog heading, and the check that the commit's profile is the
+# version's profile.
+#
+# How a release is cut:
+#
+#   1. A release pull request moves everything under `## [Unreleased]` in
+#      CHANGELOG.md to a new heading `## [sdp-X.Y.Z] - YYYY-MM-DD` directly
+#      below it, and changes nothing else.
+#   2. It merges. Its merge commit is the commit that made X.Y.Z current: the
+#      first commit on main's first-parent line whose changelog has the
+#      heading. That commit gets the tag, never a later one.
+#   3. This workflow is dispatched from main with `version` X.Y.Z and `commit`
+#      the full SHA of that merge commit.
+#
+# Dispatching it is the release, an outward act; who may decide it is in
+# metasalmon's HUB.md, "Which pull requests need Brett".
+#
+# Every check below refuses rather than warns, because a published tag is not
+# something to fix afterwards.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the sdp- prefix, for example 0.3.1"
+        required: true
+        type: string
+      commit:
+        description: "Full 40-character SHA of the commit that made that version current: the release pull request's merge commit"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # Inputs reach the shell only through the environment, never by
+      # interpolation into a script, so no input can become code.
+      VERSION: ${{ inputs.version }}
+      COMMIT: ${{ inputs.commit }}
+      TAG: sdp-${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check the inputs, and that the commit made the version current
+        run: |
+          set -euo pipefail
+          refuse() { echo "::error::$*"; exit 1; }
+
+          # Only main's copy of this file is the reviewed one. A dispatch from
+          # any other branch runs that branch's copy, checks and all.
+          [ "$GITHUB_REF" = refs/heads/main ] || refuse "dispatch this workflow from main, not $GITHUB_REF"
+          # Semantic Versioning: each part is 0 or has no leading zero, so
+          # 0.3.01 and 00.3.1 are refused rather than tagged.
+          [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]] || refuse "version must be X.Y.Z without the sdp- prefix and without leading zeros, for example 0.3.1"
+          [[ "$COMMIT" =~ ^[0-9a-f]{40}$ ]] || refuse "commit must be a full 40-character SHA"
+          git cat-file -e "$COMMIT^{commit}" 2>/dev/null || refuse "$COMMIT is not a commit in this repository"
+
+          # First-parent history, not ancestry. The release pull request's
+          # own commit is an ancestor of main and already carries the heading,
+          # but the version became current on main at the merge. Every list
+          # goes to a file: a reader that stops early, like grep -q, ends a
+          # pipe with SIGPIPE, which pipefail reports as a failure.
+          git rev-list --first-parent origin/main > "$RUNNER_TEMP/first-parent.txt"
+          grep -qxF "$COMMIT" "$RUNNER_TEMP/first-parent.txt" || refuse "$COMMIT is not on main's first-parent history. Give the release pull request's merge commit, not a commit from its branch."
+
+          # The version's heading, compared as a string so that the dots in
+          # the version are dots: `## [sdp-X.Y.Z]`, then a space or the end.
+          headings() {
+            awk -v h="## [$TAG]" 'substr($0, 1, length(h)) == h && (length($0) == length(h) || substr($0, length(h) + 1, 1) == " ")' "$1"
+          }
+          git cat-file -e "$COMMIT:CHANGELOG.md" 2>/dev/null || refuse "there is no CHANGELOG.md at $COMMIT"
+          git show "$COMMIT:CHANGELOG.md" > "$RUNNER_TEMP/changelog.md"
+          headings "$RUNNER_TEMP/changelog.md" > "$RUNNER_TEMP/headings.txt"
+          count="$(wc -l < "$RUNNER_TEMP/headings.txt")"
+          [ "$count" -eq 1 ] || refuse "CHANGELOG.md at $COMMIT has $count headings for $TAG, and needs exactly one"
+          heading="$(cat "$RUNNER_TEMP/headings.txt")"
+          [[ "$heading" =~ ^"## [$TAG] - "[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || refuse "the heading for $TAG must read '## [$TAG] - YYYY-MM-DD', and at $COMMIT it reads '$heading'"
+
+          # The commit that made the version current is the first on main
+          # whose changelog has the heading, so its first parent has none.
+          parent="$(git rev-parse -q --verify "$COMMIT^1" || true)"
+          if [ -n "$parent" ] && git cat-file -e "$parent:CHANGELOG.md" 2>/dev/null; then
+            git show "$parent:CHANGELOG.md" > "$RUNNER_TEMP/changelog-before.md"
+            headings "$RUNNER_TEMP/changelog-before.md" > "$RUNNER_TEMP/headings-before.txt"
+            [ ! -s "$RUNNER_TEMP/headings-before.txt" ] || refuse "CHANGELOG.md already had a heading for $TAG at $parent, the first parent of $COMMIT, so $COMMIT is not the commit that made $VERSION current"
+          fi
+
+          # An entry still under [Unreleased] at this commit is in the tree
+          # the tag names, so leaving it there would leave it out of the notes.
+          awk '$0 == "## [Unreleased]" { found = 1; next } found && /^## / { exit } found' "$RUNNER_TEMP/changelog.md" > "$RUNNER_TEMP/unreleased.md"
+          if grep -q '[^[:space:]]' "$RUNNER_TEMP/unreleased.md"; then
+            refuse "CHANGELOG.md at $COMMIT still has entries under [Unreleased]. They ship in $TAG, so the release pull request moves them under its heading."
+          fi
+
+      - name: Check the commit's profile is the version's profile
+        run: |
+          set -euo pipefail
+          refuse() { echo "::error::$*"; exit 1; }
+
+          # sdp-X.Y.Z belongs to the vX.Y profile. A patch release keeps its
+          # minor's profile; a new minor moves to a new profile directory
+          # before it is released. The commit's current profile is the one
+          # schema/sdp.rules.yaml names, which `generate_artifacts.py --check`
+          # keeps equal to that profile's own $id.
+          family="${VERSION%.*}"
+          profile="profiles/salmon-data-package/v$family/profile.json"
+          git cat-file -e "$COMMIT:schema/sdp.rules.yaml" 2>/dev/null || refuse "there is no schema/sdp.rules.yaml at $COMMIT"
+          git show "$COMMIT:schema/sdp.rules.yaml" > "$RUNNER_TEMP/rules.yaml"
+          url="$(awk '/^profile:/ { print $2; exit }' "$RUNNER_TEMP/rules.yaml")"
+          case "$url" in
+            */"$profile") ;;
+            *) refuse "$TAG needs the v$family profile, but schema/sdp.rules.yaml at $COMMIT names '$url'" ;;
+          esac
+          git cat-file -e "$COMMIT:$profile" 2>/dev/null || refuse "there is no $profile at $COMMIT"
+          git show "$COMMIT:$profile" > "$RUNNER_TEMP/profile.json"
+          [ "$(jq -r '."$id"' "$RUNNER_TEMP/profile.json")" = "$url" ] || refuse "$profile at $COMMIT does not carry the \$id that schema/sdp.rules.yaml names"
+          # The profile also states its version. Only the family is compared:
+          # a patch release does not regenerate the profile.
+          case "$(jq -r '."sdp:version"' "$RUNNER_TEMP/profile.json")" in
+            "sdp-$family".*) ;;
+            *) refuse "$profile at $COMMIT does not state an sdp-$family version" ;;
+          esac
+
+      # A run can fail after the tag is pushed and before the release exists.
+      # A rerun has to be able to finish that, so an existing tag is accepted
+      # when it is annotated and names this commit, and the run then only
+      # publishes. Any other existing tag, and any existing release, is refused.
+      - name: Check any existing tag or release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          refuse() { echo "::error::$*"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            git fetch --quiet origin "refs/tags/$TAG:refs/tags/$TAG"
+            [ "$(git cat-file -t "refs/tags/$TAG")" = tag ] || refuse "tag $TAG exists and is not annotated"
+            [ "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$COMMIT" ] || refuse "tag $TAG exists on a different commit"
+            echo "Tag $TAG already names $COMMIT, so this run only publishes the release."
+            echo "TAG_EXISTS=1" >> "$GITHUB_ENV"
+          fi
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            refuse "a release for $TAG already exists"
+          fi
+
+      - name: Take the notes from the changelog at that commit
+        run: |
+          set -euo pipefail
+          # From a file, never from `git show` piped into an awk that stops at
+          # the next heading: that pipe is what killed metasalmonpy's first
+          # real release run with SIGPIPE.
+          git show "$COMMIT:CHANGELOG.md" > "$RUNNER_TEMP/changelog.md"
+          awk -v h="## [$TAG]" '
+            found && /^## / { exit }
+            found { print }
+            substr($0, 1, length(h)) == h && (length($0) == length(h) || substr($0, length(h) + 1, 1) == " ") { found = 1 }
+          ' "$RUNNER_TEMP/changelog.md" > "$RUNNER_TEMP/release-notes.md"
+          grep -q '[^[:space:]]' "$RUNNER_TEMP/release-notes.md" || { echo "::error::the $TAG section of CHANGELOG.md at $COMMIT is empty"; exit 1; }
+          echo "Notes: $(wc -l < "$RUNNER_TEMP/release-notes.md") lines"
+
+      - name: Tag and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if [ "${TAG_EXISTS:-0}" != 1 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Salmon Data Package spec $TAG (see CHANGELOG)" "$COMMIT"
+            git push origin "refs/tags/$TAG"
+          fi
+          gh release create "$TAG" --verify-tag --title "Salmon Data Package spec $TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
