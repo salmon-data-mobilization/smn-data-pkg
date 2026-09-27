@@ -54,10 +54,8 @@
     {
       "name": "license",
       "type": "string",
-      "description": "License name or URL.",
-      "constraints": {
-        "required": true
-      },
+      "description": "Reuse license: an SPDX-style identifier, a license name, or a URL. Leave blank when none has been granted.",
+      "sdp:requirement": "recommended",
       "example": "CC-BY-4.0",
       "sdp:examples": [
         "CC-BY-4.0",

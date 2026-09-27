@@ -22,7 +22,7 @@ One row per dataset.
 | creator | string | required | Name(s) of dataset creator(s), team, or originating project/program. |  |
 | contact_name | string | required | Primary inquiry contact, such as a person, team, or office. |  |
 | contact_email | string | required | Contact email address for the inquiry contact. |  |
-| license | string | required | License name or URL. | Examples: `CC-BY-4.0`, `Open Government Licence - Canada` |
+| license | string | recommended | Reuse license: an SPDX-style identifier, a license name, or a URL. Leave blank when none has been granted. | Examples: `CC-BY-4.0`, `Open Government Licence - Canada` |
 | contact_org | string | optional | Organization for contact_name. Leave blank if already clear from contact_name or creator. |  |
 | contact_position | string | optional | Role or title for contact_name, mainly useful when contact_name is an individual. |  |
 | temporal_start | string | optional | Start of the period covered by the dataset: a year, a date, or an ISO 8601 instant in UTC. | Examples: `1996`, `1996-01-01`, `1996-01-01T00:00:00Z` |

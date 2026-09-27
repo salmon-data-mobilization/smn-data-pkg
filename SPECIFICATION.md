@@ -81,7 +81,7 @@ Minimum requirements:
 - Include one data resource for each row in `metadata/tables.csv`.
 - Set each resource path to the matching `file_name` value from `metadata/tables.csv`.
 - Include a field entry for each matching row in `metadata/column_dictionary.csv`, in dictionary row order, shaped as described under *Data resource field entries*.
-- Keep package title, description, license, resource paths, table labels, and field names consistent with the CSV metadata.
+- Keep package title, description, license, resource paths, table labels, and field names consistent with the CSV metadata. When `metadata/dataset.csv` states no license, `datapackage.json` carries no `licenses`; see *Metadata field reference*.
 
 If a CSV value and the generated `datapackage.json` disagree, the package is invalid and must be regenerated or corrected.
 
@@ -158,6 +158,12 @@ The authoritative machine-readable metadata field names, order, types, requireme
 The generated human-readable field reference is `docs/field-reference.md`. Do not maintain duplicate field tables in this file.
 
 `metadata/dataset.csv` temporal coverage fields, `temporal_start` and `temporal_end`, accept a year (`YYYY`), a full date (`YYYY-MM-DD`), or an ISO 8601 instant in UTC (`YYYY-MM-DDTHH:MM:SSZ`: `T` separator, `Z` zone marker, four-digit year, no fractional second). Partial dates such as `YYYY-MM` are invalid, and so is any other instant spelling -- a space separator, a missing or offset zone marker such as `+00:00`, a fractional second, or a year of fewer than four digits.
+
+`metadata/dataset.csv` `license` is **recommended, not required**. Most datasets are shared without a reuse license: the publisher releases them under its own terms of use, which often require its permission to redistribute. Requiring the field left a package like that two choices: state a license the publisher never granted, or fail validation.
+
+- **Blank** means no license has been granted. `datapackage.json` then carries no `licenses` (the key is absent, or an empty array), and a reuser asks the publisher, through the dataset contact, before reusing the data. Cite the source in `source_citation`, so that a reuser can find the publisher and its terms.
+- **Stated**, it may be any license: an SPDX-style identifier such as `CC-BY-4.0`, a license name, or a URL. `datapackage.json` `licenses` must carry the same text as an entry's `name`, `title` or `path`. For `CC-BY-4.0` and `Open Government Licence - Canada`, the entry must instead carry the canonical name, title and path that `scripts/validate_package.py` lists as `KNOWN_LICENSES`.
+- **A placeholder is never a license.** Text a metadata tool leaves for a person to replace, meaning a value that begins `MISSING METADATA:`, `MISSING DESCRIPTION:`, `REVIEW REQUIRED:` or `REVIEW:`, makes the package invalid. Replace it with a license, or leave the field blank.
 
 ## Measurement column requirements
 
