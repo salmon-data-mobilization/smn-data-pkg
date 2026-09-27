@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from validate_package import (  # noqa: E402
     DESCRIPTOR_PROJECTED_COLUMNS,
+    KNOWN_LICENSES,
     Validator,
     descriptor_annotation_keys,
     descriptor_field_from_column,
@@ -154,6 +155,113 @@ class StrictValidationTests(unittest.TestCase):
         path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
 
         self.assertHasError("licenses must map")
+
+    # The license is recommended, not required (Brett, 2026-09-26: most
+    # datasets assign none). Until then the validator accepted two licenses,
+    # which also meant it refused a blank field and any placeholder text.
+
+    def test_package_that_states_no_license_passes(self) -> None:
+        set_dataset_cells(self.package_path, {"license": ""})
+        set_descriptor_licenses(self.package_path, None)
+
+        self.assertEqual([], self.errors())
+
+    def test_empty_descriptor_licenses_claims_no_license(self) -> None:
+        set_dataset_cells(self.package_path, {"license": ""})
+        set_descriptor_licenses(self.package_path, [])
+
+        self.assertEqual([], self.errors())
+
+    def test_null_descriptor_licenses_is_not_an_absent_key(self) -> None:
+        # The specification admits an absent key or an empty array, and
+        # Frictionless requires an array whenever the key is present.
+        set_dataset_cells(self.package_path, {"license": ""})
+        path = self.package_path / "datapackage.json"
+        descriptor = json.loads(path.read_text(encoding="utf-8"))
+        descriptor["licenses"] = None
+        path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
+
+        self.assertHasError("datapackage.json licenses must be absent")
+
+    def test_descriptor_must_not_claim_a_license_the_dataset_does_not_state(self) -> None:
+        # The example's descriptor keeps its Open Government Licence entry.
+        set_dataset_cells(self.package_path, {"license": ""})
+
+        self.assertHasError("datapackage.json licenses must be absent")
+
+    def test_any_stated_license_passes_when_the_descriptor_carries_it(self) -> None:
+        cases = {
+            "identifier, carried as name": (
+                "CC-BY-NC-4.0",
+                [{"name": "CC-BY-NC-4.0"}],
+            ),
+            "name, carried as title": (
+                "Example Agency Open Data Licence 1.0",
+                [{"title": "Example Agency Open Data Licence 1.0"}],
+            ),
+            "URL, carried as path": (
+                "https://example.org/data-terms/",
+                [{"path": "https://example.org/data-terms/"}],
+            ),
+        }
+        for label, (license_text, licenses) in cases.items():
+            with self.subTest(label):
+                set_dataset_cells(self.package_path, {"license": license_text})
+                set_descriptor_licenses(self.package_path, licenses)
+
+                self.assertEqual([], self.errors())
+
+    def test_stated_license_the_descriptor_does_not_carry_fails(self) -> None:
+        set_dataset_cells(self.package_path, {"license": "CC-BY-NC-4.0"})
+        set_descriptor_licenses(self.package_path, [dict(KNOWN_LICENSES["CC-BY-4.0"])])
+
+        self.assertHasError("licenses must carry the dataset license 'CC-BY-NC-4.0'")
+
+    def test_stated_license_needs_a_descriptor_license(self) -> None:
+        set_dataset_cells(self.package_path, {"license": "CC0-1.0"})
+        set_descriptor_licenses(self.package_path, None)
+
+        self.assertHasError("licenses must include the dataset license")
+
+    def test_known_license_still_needs_its_canonical_mapping(self) -> None:
+        # A bare name match is enough for any other license, and it must not
+        # stand in for the canonical name, title and path of the two known ones.
+        set_dataset_cells(self.package_path, {"license": "CC-BY-4.0"})
+        set_descriptor_licenses(self.package_path, [{"name": "CC-BY-4.0"}])
+        self.assertHasError("licenses must map 'CC-BY-4.0'")
+
+        set_descriptor_licenses(self.package_path, [dict(KNOWN_LICENSES["CC-BY-4.0"])])
+        self.assertEqual([], self.errors())
+
+    def test_placeholder_is_never_a_license(self) -> None:
+        # Once any text is a license, the text a metadata tool leaves for a
+        # person to replace would pass as one unless it is refused by name. A
+        # descriptor that carries the same text satisfies the name/title/path
+        # match, so the refusal must not depend on the descriptor.
+        placeholders = (
+            "MISSING METADATA: add dataset license (for example, CC-BY-4.0).",
+            "MISSING DESCRIPTION: describe the license.",
+            "REVIEW REQUIRED: confirm the license.",
+            "REVIEW:CC-BY-4.0",
+            "review : CC-BY-4.0",
+        )
+        for value in placeholders:
+            for label, licenses in (
+                ("descriptor carries it", [{"name": value, "title": value}]),
+                ("descriptor claims none", None),
+            ):
+                with self.subTest(label, value=value):
+                    set_dataset_cells(self.package_path, {"license": value})
+                    set_descriptor_licenses(self.package_path, licenses)
+
+                    errors = self.errors()
+                    self.assertTrue(
+                        any(
+                            "field license holds an unresolved placeholder" in error
+                            for error in errors
+                        ),
+                        errors,
+                    )
 
     def test_descriptor_fields_may_carry_dictionary_annotation_keys(self) -> None:
         # Hub backlog #90, ruled 2026-08-24 (permit the keys): both mirrors
@@ -604,6 +712,16 @@ class DescriptorAllowlistTests(unittest.TestCase):
 
 
 class ProfileTests(unittest.TestCase):
+    def test_dataset_license_is_recommended_not_required(self) -> None:
+        schema = generate_artifacts.load_schema_bundle()["metadata_schemas"]["dataset"]
+        field = next(field for field in schema["fields"] if field["name"] == "license")
+
+        self.assertEqual("recommended", generate_artifacts.field_requirement(field))
+        self.assertIsNot(True, field.get("constraints", {}).get("required"))
+        self.assertEqual(
+            ["CC-BY-4.0", "Open Government Licence - Canada"], field["sdp:examples"]
+        )
+
     def test_generated_profile_has_no_tabular_data_package_ref(self) -> None:
         profile_text = (
             ROOT / "profiles" / "salmon-data-package" / "v0.2" / "profile.json"
@@ -678,6 +796,24 @@ def edit_descriptor_field(package_path: Path, column_name: str, keys: dict) -> N
     for field in data_resource(descriptor)["schema"]["fields"]:
         if field.get("name") == column_name:
             field.update(keys)
+    path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
+
+
+def set_dataset_cells(package_path: Path, cells: dict[str, str]) -> None:
+    path = package_path / "metadata" / "dataset.csv"
+    rows = read_csv(path)
+    rows[0].update(cells)
+    write_csv(path, rows, rows[0].keys())
+
+
+def set_descriptor_licenses(package_path: Path, licenses) -> None:
+    """Replace datapackage.json licenses; None removes the key."""
+    path = package_path / "datapackage.json"
+    descriptor = json.loads(path.read_text(encoding="utf-8"))
+    if licenses is None:
+        descriptor.pop("licenses", None)
+    else:
+        descriptor["licenses"] = licenses
     path.write_text(json.dumps(descriptor, indent=2) + "\n", encoding="utf-8")
 
 
