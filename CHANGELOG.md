@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- The methods prose in the human-readable specification, template and
+  mixed-grain example now states the ruled vocabulary-graph check: a method
+  IRI may reach a resource typed `sosa:Procedure` through zero or more
+  `skos:broader` steps, including direct typing at zero steps (hub item B-167).
+  The table-schema field description and generated reference follow the same
+  wording. Rule IDs and the machine-readable rule conditions are unchanged.
+
 ## [sdp-0.3.2] - 2026-09-26
 
 ### Changed
