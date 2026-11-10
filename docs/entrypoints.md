@@ -8,7 +8,12 @@ Purpose: keep one short, reliable map of what starts the system, what is wired i
 
 ## Test
 
-- Test command(s): `python3 -m unittest discover -s tests -v` and `python3 scripts/generate_artifacts.py --check`
+- Install test dependencies: `python3 -m pip install -r requirements-test.txt`
+- Test command(s): `python3 -m pytest tests/` and `python3 scripts/generate_artifacts.py --check`
+- Example vocabulary check: `python3 -m pytest tests/test_example_iri_resolution.py`
+  checks the two repaired example IRIs against Turtle term declarations. The
+  live check skips when its independent connectivity probe cannot reach the
+  vocabulary service; the example values and fragment/type checks also run offline.
 - Fastest smoke test: `python3 scripts/validate_package.py examples/minimal-example`
 
 ## Canonical Implementations (Per Feature)
@@ -23,6 +28,7 @@ Purpose: keep one short, reliable map of what starts the system, what is wired i
 - Categorical codes meaning (canonical labels/IRIs live in codes.csv) → `SPECIFICATION.md` + `schema/frictionless/metadata/codes.schema.json` + `schema/sdp.rules.yaml`
 - SOSA procedure references (sdp-0.3.0 removed the `metadata/methods.csv` registry) → `SPECIFICATION.md` + `schema/frictionless/metadata/tables.schema.json` (`method_iri`) + `schema/frictionless/metadata/codes.schema.json` (`term_iri` for row-varying procedures) + `docs/i-adopt-integration-guide.md`
 - Why a method term qualifies by *reaching* `sosa:Procedure` rather than by being typed one, and what retires the `unresolved` outcome → `docs/adr/0002-sosa-procedure-reachability.md` (the rules themselves stay in `schema/sdp.rules.yaml`)
+- Pending I-ADOPT relation-format decision (non-normative; B-154, dependent on B-114) → `docs/i-adopt-relation-options.md`
 - Mixed-grain measure/dimension bindings → `schema/frictionless/metadata/observation_*.schema.json` + `schema/sdp.rules.yaml` + `docs/observation-structure-guide.md`
 - Reproducibility sidecar layout → `SPECIFICATION.md` + `examples/mixed-grain-example/reproducibility/`
 - Human quickstart guide → `README.md` ("Quick Start" section; no separate quickstart document exists under docs/)
