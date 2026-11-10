@@ -8,7 +8,12 @@ Purpose: keep one short, reliable map of what starts the system, what is wired i
 
 ## Test
 
-- Test command(s): `python3 -m unittest discover -s tests -v` and `python3 scripts/generate_artifacts.py --check`
+- Install test dependencies: `python3 -m pip install -r requirements-test.txt`
+- Test command(s): `python3 -m pytest tests/` and `python3 scripts/generate_artifacts.py --check`
+- Example vocabulary check: `python3 -m pytest tests/test_example_iri_resolution.py`
+  checks the two repaired example IRIs against Turtle term declarations. The
+  live check skips when its independent connectivity probe cannot reach the
+  vocabulary service; the example values and fragment/type checks also run offline.
 - Fastest smoke test: `python3 scripts/validate_package.py examples/minimal-example`
 
 ## Canonical Implementations (Per Feature)

@@ -38,8 +38,7 @@ MIRROR_ANNOTATION_KEYS = (
     "statistical_modifier_iri",
 )
 
-# A fixture placeholder in the namespace the minimal example already uses for
-# its own placeholder terms (`https://w3id.org/example/salmon#...`). No shipped
+# A test-only fixture placeholder (`https://w3id.org/example/salmon#...`). No shipped
 # example carries a statistical_modifier_iri, so a fully annotated measurement
 # column needs one that is not a term choice. Retire when an example carries
 # a real smn:StatisticalModifierScheme concept and the test can copy it.

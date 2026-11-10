@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Replace the minimal example's two unresolvable placeholder IRIs with released
+  `gcdfo:SpawnerAbundance` (`term_type: owl_class`) and `smn:NaturalOrigin`.
+  Keep `property_iri: smn:Abundance` unchanged. Tests pin the example values and
+  check that each term is declared in its returned Turtle, rather than treating
+  an HTTP 200 response for an arbitrary fragment as evidence of a real term
+  (MetaSalmon hub item B-99).
+
 ## [sdp-0.3.2] - 2026-09-26
 
 ### Changed
