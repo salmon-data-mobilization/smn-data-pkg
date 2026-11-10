@@ -12,8 +12,10 @@ The example also shows both procedure patterns (sdp-0.3.0):
   names the *Collection protocol* section below), which specifies which method
   produces each measure — so no per-column method metadata is needed.
 - `estimate_method` is a row-varying attribute bound with
-  `sosa:usedProcedure`; its code IRIs resolve directly to shared-vocabulary
-  `sosa:Procedure` concepts (placeholder `example.org` IRIs here).
+  `sosa:usedProcedure`. Its `example.org` code IRIs are placeholders; a real
+  package replaces each with an IRI declared by a shared vocabulary and
+  reaching a resource typed `sosa:Procedure` through zero or more
+  `skos:broader` steps. Direct typing qualifies at zero steps.
 
 ## Collection protocol
 

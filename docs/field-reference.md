@@ -61,7 +61,7 @@ One row per table in the package.
 | primary_key | string | optional | Comma-separated list of column names forming a primary key, with no spaces. |  |
 | protocol_iri | string | optional | IRI (DOI or stable URL) of the documented protocol governing this table's observation events. Start here: a protocol names the per-measurement methods, so the dataset does not repeat them. |  |
 | protocol_citation | string | optional | Citation for the protocol. For in-package protocols described in the package README.md, name the section here; protocol_iri may then be omitted. |  |
-| method_iri | string | optional | SOSA Procedure IRI when a single method applies to the whole table and there is no protocol document to cite. When the method varies per row, it belongs in the data as a coded column bound with sosa:usedProcedure. |  |
+| method_iri | string | optional | IRI for a table-wide method, declared by a shared vocabulary and reaching a resource typed sosa:Procedure through zero or more skos:broader steps (direct typing qualifies). Use when there is no protocol document to cite. A row-varying method belongs in the data as a coded column bound with sosa:usedProcedure. |  |
 
 ## `metadata/column_dictionary.csv`
 

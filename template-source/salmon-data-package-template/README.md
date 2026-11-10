@@ -13,8 +13,10 @@ when no measure-specific bindings are needed; use them when measures in a wide
 table have different logical dimension sets. Method references have no
 registry file: a table-level method lives in `metadata/tables.csv`
 (`method_iri`), and a row-varying procedure column binds `sosa:usedProcedure`
-with its enumerated `metadata/codes.csv` term IRIs resolving to
-shared-vocabulary SOSA Procedure concepts.
+with each enumerated `metadata/codes.csv` term IRI declared by a shared
+vocabulary and reaching a resource typed `sosa:Procedure` through zero or more
+`skos:broader` steps. Direct typing qualifies at zero steps; a validator checks
+the vocabulary graph rather than dereferencing each IRI over HTTP.
 
 An extended package may also add an optional top-level `reproducibility/`
 directory with `reviewed_semantic_selections.csv`, `workflow/`, `provenance/`,

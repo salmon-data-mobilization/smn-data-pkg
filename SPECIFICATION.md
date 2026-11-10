@@ -240,10 +240,26 @@ could follow; it specifies which methods apply to which measurements, and it
 is cited, not executed. A *method* is a technique named by a protocol and
 applied to produce a value, with two subtypes rather than parallel concepts:
 observation methods (how it was observed) and analytical methods (how the
-number was derived). Every method or protocol IRI resolves to a shared
-vocabulary concept typed as a `sosa:Procedure`; there is **no per-package
-method registry** — labels and definitions belong to the vocabulary the IRI
-resolves to, and version and citation belong to the protocol.
+number was derived). Every method or protocol IRI must be declared by a shared
+vocabulary and reach a resource typed `sosa:Procedure` through zero or more
+`skos:broader` steps. A directly typed IRI qualifies at zero steps. There is
+**no per-package method registry** — labels and definitions belong to the
+vocabulary that declares the IRI, and version and citation belong to the
+protocol.
+
+This is a check of the vocabulary graph, not a claim that `skos:broader`
+entails `rdf:type sosa:Procedure` or an instruction to dereference each IRI
+over HTTP. The [released DFO vocabulary](https://github.com/dfo-pacific-science/dfo-salmon-ontology/blob/0.0.9/ontology/dfo-salmon.ttl#L1024-L1038)
+places specific methods such as `gcdfo:FixedSiteCensusManual` below the
+directly typed `smn:EnumerationMethod`, and the [Salmon Domain Ontology's
+method shape](https://github.com/salmon-data-mobilization/salmon-domain-ontology/blob/0e420373e2fb76b752e03bc10060884d711773be/ontology/shapes/method-shapes.ttl#L20-L24)
+uses a zero-or-more `skos:broader` path. [SOSA defines `Procedure` as a class for a
+reusable plan or method](https://www.w3.org/TR/vocab-ssn/#SOSAProcedure),
+while [SKOS semantic relations link
+concepts](https://www.w3.org/TR/skos-reference/#semantic-relations) (S19–S22); an
+asserted `skos:broader` edge to the OWL class `sosa:Procedure` would type that
+class as a SKOS concept, not make the specific method a Procedure. The path
+must reach a *resource typed* as a Procedure instead.
 
 A protocol does not have to be external. Three forms, in descending order of
 preference:
@@ -268,7 +284,11 @@ For row-varying procedures, bind a categorical column as an observation
 `attribute` with `component_relation_iri` equal to
 `http://www.w3.org/ns/sosa/usedProcedure`. Every enumerated code in that
 column, including currently unobserved allowed values, has a `codes.csv`
-`term_iri` resolving to a shared-vocabulary `sosa:Procedure` concept.
+`term_iri` declared by a shared vocabulary and reaching a resource typed
+`sosa:Procedure` through zero or more `skos:broader` steps. A directly typed
+code qualifies at zero steps. Estimate-type and data-quality ratings describe
+how good a value is rather than how it was produced; their columns remain
+ordinary categorical attributes and are not bound with `sosa:usedProcedure`.
 
 Transformation scripts, execution environments, parameter files, and detailed
 run provenance belong under `reproducibility/`.
